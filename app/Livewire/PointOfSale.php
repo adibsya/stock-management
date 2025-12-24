@@ -1,7 +1,8 @@
 <?php
-
 namespace App\Livewire;
+use Illuminate\Support\Facades\Auth;
 
+use App\Models\Gudang;
 use App\Models\Barang;
 use App\Models\Pelanggan;
 use App\Models\Penjualan;
@@ -16,6 +17,7 @@ class PointOfSale extends Component
     public string $metode_pembayaran = 'tunai';
     public string $diskon_transaksi = '0';
     public string $bayar = '0';
+    public ?int $gudang_id = null;
 
     protected $listeners = ['refreshCart' => '$refresh'];
 
@@ -126,7 +128,8 @@ class PointOfSale extends Component
 
         try {
             $transaksiService = app(TransaksiService::class);
-            
+            $user = Auth::user();
+
             $items = array_map(function ($item) {
                 return [
                     'barang_id' => $item['barang_id'],
@@ -136,8 +139,9 @@ class PointOfSale extends Component
             }, $this->cart);
 
             $penjualan = $transaksiService->simpanPenjualan([
-                'user_id' => 1, // TODO: Ganti dengan auth user
+                'user_id' => $user->id,
                 'pelanggan_id' => $this->pelanggan_id,
+                'gudang_id' => $this->gudang_id,
                 'items' => $items,
                 'diskon_transaksi' => $this->diskon,
                 'metode_pembayaran' => $this->metode_pembayaran,
@@ -145,7 +149,7 @@ class PointOfSale extends Component
 
             $this->clearCart();
             $this->dispatch('notify', message: 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
-            
+
         } catch (\Exception $e) {
             $this->dispatch('notify', message: 'Error: ' . $e->getMessage());
         }
@@ -153,8 +157,22 @@ class PointOfSale extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        $gudangs = collect();
+        if ($user->isSuperAdmin()) {
+            $gudangs = Gudang::orderBy('nama_gudang')->get();
+        } elseif ($user->isAdmin()) {
+            if ($user->gudang) {
+                $gudangs = collect([$user->gudang]);
+                $this->gudang_id = $user->gudang->id;
+            }
+        }
+
         $barangs = Barang::query()
             ->where('stok', '>', 0)
+            ->when($this->gudang_id, function ($query) {
+                $query->where('gudang_id', $this->gudang_id);
+            })
             ->when($this->searchBarang, function ($query) {
                 $query->where(function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->searchBarang . '%')
@@ -169,6 +187,7 @@ class PointOfSale extends Component
         return view('livewire.point-of-sale', [
             'barangs' => $barangs,
             'pelanggans' => $pelanggans,
+            'gudangs' => $gudangs,
         ]);
     }
 }

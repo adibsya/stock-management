@@ -1,6 +1,10 @@
-<x-layouts.app>
-    <x-slot:title>Edit Barang - Ngarumi</x-slot:title>
-    <x-slot:header>Edit Barang</x-slot:header>
 
-    <livewire:barang-form :barang="$barang" />
-</x-layouts.app>
+@extends('components.layouts.app')
+
+@section('header', 'Edit Barang (Identitas)')
+
+@section('content')
+<div>
+	@livewire('barang-master-form', ['barangMaster' => $barangMaster])
+</div>
+@endsection

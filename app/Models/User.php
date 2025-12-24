@@ -9,8 +9,17 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+
+    /**
+     * Relasi ke Gudang (jika user adalah admin per gudang)
+     */
+    public function gudang()
+    {
+        return $this->belongsTo(\App\Models\Gudang::class, 'gudang_id');
+    }
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    
 
     /**
      * Role constants
@@ -29,6 +38,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'gudang_id',
     ];
 
     /**
@@ -106,4 +116,5 @@ class User extends Authenticatable
             default => ucfirst($this->role ?? 'User'),
         };
     }
+    
 }

@@ -81,6 +81,12 @@
         </div>
     </div>
 
+    @if($penjualan->mode_termin === 'termin')
+        <div class="card mt-8">
+            <livewire:penjualan-termin-form :penjualan="$penjualan" />
+        </div>
+    @endif
+
     <div class="mt-6 flex gap-4">
         <a href="{{ route('penjualan.index') }}" class="btn-secondary">
             &larr; Kembali

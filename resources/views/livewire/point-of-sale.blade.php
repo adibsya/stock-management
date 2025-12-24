@@ -70,6 +70,23 @@
                 @endforelse
             </div>
 
+            <!-- Gudang -->
+            <div class="mb-4">
+                <label class="block text-sm text-gray-600 mb-1">Gudang</label>
+                @php
+                    $user = auth()->user();
+                @endphp
+                @if($user && $user->isAdmin() && $user->gudang)
+                    <div class="input-field bg-gray-100 cursor-not-allowed">{{ $user->gudang->nama_gudang }}</div>
+                @else
+                    <select wire:model="gudang_id" class="input-field">
+                        <option value="">Pilih Gudang</option>
+                        @foreach($gudangs as $gudang)
+                            <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
+                        @endforeach
+                    </select>
+                @endif
+            </div>
             <!-- Pelanggan -->
             <div class="mb-4">
                 <label class="block text-sm text-gray-600 mb-1">Pelanggan</label>

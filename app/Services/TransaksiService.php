@@ -26,24 +26,25 @@ class TransaksiService
         return DB::transaction(function () use ($data) {
             // Generate no faktur jika belum ada
             $noFaktur = $data['no_faktur'] ?? Penjualan::generateNoFaktur();
-            
+
             // Hitung total kotor dari items
             $totalKotor = 0;
             foreach ($data['items'] as $item) {
                 $totalKotor += $item['jumlah'] * $item['harga_satuan'];
             }
-            
+
             // Hitung pajak dan total bayar
             $diskonTransaksi = $data['diskon_transaksi'] ?? 0;
             $pajak = $data['pajak'] ?? 0;
             $totalBayar = ($totalKotor - $diskonTransaksi) + $pajak;
-            
-            // Simpan penjualan header
+
+            // Simpan penjualan header (wajib ada gudang_id)
             $penjualan = Penjualan::create([
                 'no_faktur' => $noFaktur,
                 'tanggal' => $data['tanggal'] ?? now(),
                 'pelanggan_id' => $data['pelanggan_id'] ?? null,
                 'user_id' => $data['user_id'],
+                'gudang_id' => $data['gudang_id'] ?? null,
                 'total_kotor' => $totalKotor,
                 'diskon_transaksi' => $diskonTransaksi,
                 'pajak' => $pajak,
@@ -51,25 +52,28 @@ class TransaksiService
                 'metode_pembayaran' => $data['metode_pembayaran'] ?? 'tunai',
                 'status' => $data['status'] ?? 'selesai',
             ]);
-            
+
             // Simpan detail penjualan dan update stok
             foreach ($data['items'] as $item) {
                 $subtotal = $item['jumlah'] * $item['harga_satuan'];
-                
-                // Simpan detail penjualan
+
+                // Simpan detail penjualan (ikut gudang_id dari header atau item)
                 DetailPenjualan::create([
                     'penjualan_id' => $penjualan->id,
                     'barang_id' => $item['barang_id'],
+                    'gudang_id' => $item['gudang_id'] ?? $penjualan->gudang_id,
                     'jumlah' => $item['jumlah'],
                     'harga_satuan' => $item['harga_satuan'],
                     'subtotal' => $subtotal,
                 ]);
-                
-                // Update stok barang (kurangi)
-                $barang = Barang::findOrFail($item['barang_id']);
+
+                // Update stok barang (kurangi di gudang terkait)
+                $barang = Barang::where('id', $item['barang_id'])
+                    ->where('gudang_id', $item['gudang_id'] ?? $penjualan->gudang_id)
+                    ->firstOrFail();
                 $stokSebelum = $barang->stok;
                 $barang->kurangiStok($item['jumlah']);
-                
+
                 // Catat ke riwayat stok (kartu stok)
                 RiwayatStok::create([
                     'tanggal' => $penjualan->tanggal,
@@ -81,7 +85,7 @@ class TransaksiService
                     'referensi_id' => 'PNJ-' . $penjualan->id,
                 ]);
             }
-            
+
             return $penjualan->load('detailPenjualan.barang');
         });
     }

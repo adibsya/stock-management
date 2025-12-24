@@ -11,7 +11,7 @@
                        placeholder="Cari gudang..." 
                        class="input-with-icon-left">
             </div>
-            @if(auth()->user()->canModify())
+            @if(auth()->user()->role === 'super_admin')
             <a href="{{ route('gudang.create') }}" class="btn-primary whitespace-nowrap">
                 <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -50,7 +50,7 @@
                                 </span>
                             </td>
                             <td class="table-cell px-4 text-center">
-                                @if(auth()->user()->canModify())
+                                @if(auth()->user()->role === 'super_admin')
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('gudang.edit', $gudang) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

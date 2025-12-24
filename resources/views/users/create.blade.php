@@ -1,109 +1,81 @@
 <x-layouts.app title="Tambah User">
     <div class="max-w-2xl mx-auto">
-        <!-- Header -->
         <div class="mb-6">
             <a href="{{ route('users.index') }}" class="text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 mb-4">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                Kembali
+                ← Kembali
             </a>
             <h1 class="text-2xl font-bold text-gray-800">Tambah User Baru</h1>
             <p class="text-gray-600 mt-1">Tambahkan akun admin atau viewer</p>
         </div>
 
-        <!-- Form -->
         <div class="card">
             <form method="POST" action="{{ route('users.store') }}" class="space-y-6">
                 @csrf
 
-                <!-- Name -->
+                {{-- Nama --}}
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                        Nama Lengkap <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" 
-                           id="name" 
-                           name="name" 
-                           value="{{ old('name') }}"
-                           required
-                           class="input-field @error('name') border-red-500 @enderror">
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="block text-sm font-medium mb-2">Nama</label>
+                    <input type="text" name="name" value="{{ old('name') }}" required class="input-field">
+                    @error('name') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- Email -->
+                {{-- Email --}}
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email <span class="text-red-500">*</span>
-                    </label>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
-                           value="{{ old('email') }}"
-                           required
-                           class="input-field @error('email') border-red-500 @enderror">
-                    @error('email')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required class="input-field">
+                    @error('email') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- Role -->
+                {{-- Role --}}
                 <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-                        Role <span class="text-red-500">*</span>
-                    </label>
-                    <select id="role" name="role" required class="input-field @error('role') border-red-500 @enderror">
+                    <label class="block text-sm font-medium mb-2">Role</label>
+                    <select name="role" id="role" required class="input-field">
                         <option value="">Pilih Role</option>
-                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin (Bisa Edit Data)</option>
-                        <option value="viewer" {{ old('role') === 'viewer' ? 'selected' : '' }}>Viewer (Hanya Lihat)</option>
+                        <option value="admin" {{ old('role')=='admin'?'selected':'' }}>Admin</option>
+                        <option value="viewer" {{ old('role')=='viewer'?'selected':'' }}>Viewer</option>
                     </select>
-                    @error('role')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    @error('role') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- Password -->
+                {{-- Gudang --}}
+                <div id="gudang-wrapper" class="{{ old('role')==='admin' ? '' : 'hidden' }}">
+                    <label class="block text-sm font-medium mb-2">Gudang (Admin)</label>
+                    <select name="gudang_id" class="input-field">
+                        <option value="">Pilih Gudang</option>
+                        @foreach($gudangs as $gudang)
+                            <option value="{{ $gudang->id }}"
+                                {{ old('gudang_id')==$gudang->id?'selected':'' }}>
+                                {{ $gudang->nama_gudang }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('gudang_id') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Password --}}
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password <span class="text-red-500">*</span>
-                    </label>
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           required
-                           minlength="8"
-                           class="input-field @error('password') border-red-500 @enderror">
-                    <p class="mt-1 text-sm text-gray-500">Minimal 8 karakter</p>
-                    @error('password')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="block text-sm font-medium mb-2">Password</label>
+                    <input type="password" name="password" required minlength="8" class="input-field">
                 </div>
 
-                <!-- Password Confirmation -->
+                {{-- Confirm --}}
                 <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
-                        Konfirmasi Password <span class="text-red-500">*</span>
-                    </label>
-                    <input type="password" 
-                           id="password_confirmation" 
-                           name="password_confirmation" 
-                           required
-                           minlength="8"
-                           class="input-field">
+                    <label class="block text-sm font-medium mb-2">Konfirmasi Password</label>
+                    <input type="password" name="password_confirmation" required minlength="8" class="input-field">
                 </div>
 
-                <!-- Submit Buttons -->
                 <div class="flex gap-3 pt-4 border-t">
-                    <button type="submit" class="btn-primary">
-                        Simpan User
-                    </button>
-                    <a href="{{ route('users.index') }}" class="btn-secondary">
-                        Batal
-                    </a>
+                    <button class="btn-primary">Simpan</button>
+                    <a href="{{ route('users.index') }}" class="btn-secondary">Batal</a>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        document.getElementById('role').addEventListener('change', function () {
+            document.getElementById('gudang-wrapper')
+                .classList.toggle('hidden', this.value !== 'admin');
+        });
+    </script>
 </x-layouts.app>

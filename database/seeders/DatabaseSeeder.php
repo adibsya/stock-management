@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Administrator',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
+                'gudang_id' => 1, // Akan diupdate setelah Gudang Utama dibuat
             ]
         );
 
@@ -58,6 +59,13 @@ class DatabaseSeeder extends Seeder
                 'lokasi' => 'Jl. Raya Utama No. 1, Surabaya',
             ]
         );
+
+        // Update admin user dengan gudang_id yang benar
+        $admin = User::where('email', 'admin@ngarumi.com')->first();
+        if ($admin && $gudangUtama) {
+            $admin->gudang_id = $gudangUtama->id;
+            $admin->save();
+        }
 
         $gudangCabang = Gudang::updateOrCreate(
             ['nama_gudang' => 'Gudang Cabang'],

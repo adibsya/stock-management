@@ -12,7 +12,7 @@ class BarangTable extends Component
 
     public string $search = '';
     public string $kategori = '';
-    public string $sortBy = 'nama_barang';
+    public string $sortBy = 'barang_master_id';
     public string $sortDirection = 'asc';
     public int $perPage = 10;
 
@@ -57,21 +57,28 @@ class BarangTable extends Component
 
     public function render()
     {
-        $barangs = Barang::query()
-            ->with(['pemasok', 'gudang'])
+        $barangsQuery = Barang::query()
+            ->with(['pemasok', 'gudang', 'master'])
             ->when($this->search, function ($query) {
-                $query->where(function ($q) {
+                $query->whereHas('master', function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->search . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->search . '%');
                 });
-            })
-            ->when($this->kategori, function ($query) {
-                $query->where('kategori', $this->kategori);
-            })
-            ->orderBy($this->sortBy, $this->sortDirection)
-            ->paginate($this->perPage);
+            });
 
-        $kategoris = Barang::distinct()->pluck('kategori')->filter();
+        // Sorting by relasi master.nama_barang jika sortBy == 'nama_barang'
+        if ($this->sortBy === 'nama_barang') {
+            $barangsQuery->join('barang_master', 'barang.barang_master_id', '=', 'barang_master.id')
+                ->orderBy('barang_master.nama_barang', $this->sortDirection)
+                ->select('barang.*');
+        } else {
+            $barangsQuery->orderBy($this->sortBy, $this->sortDirection);
+        }
+
+        $barangs = $barangsQuery->paginate($this->perPage);
+
+        // Kategori diambil dari barang_master
+        $kategoris = \App\Models\BarangMaster::distinct()->pluck('kategori')->filter();
 
         return view('livewire.barang-table', [
             'barangs' => $barangs,

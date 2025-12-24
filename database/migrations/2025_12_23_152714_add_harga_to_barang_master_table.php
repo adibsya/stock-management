@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['super_admin', 'admin', 'viewer'])->default('viewer')->after('password');
+        Schema::table('barang_master', function (Blueprint $table) {
+            $table->decimal('harga_beli', 15, 2)->default(0)->after('keterangan');
+            $table->decimal('harga_jual', 15, 2)->default(0)->after('harga_beli');
         });
     }
+
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+        Schema::table('barang_master', function (Blueprint $table) {
+            //
         });
     }
 };

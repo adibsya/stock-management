@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Penjualan extends Model
 {
+    public function pembayaranPenjualan()
+    {
+        return $this->hasMany(\App\Models\PembayaranPenjualan::class, 'penjualan_id');
+    }
     protected $table = 'penjualan';
 
     protected $fillable = [
@@ -15,6 +19,7 @@ class Penjualan extends Model
         'tanggal',
         'pelanggan_id',
         'user_id',
+        'gudang_id',
         'total_kotor',
         'diskon_transaksi',
         'pajak',
@@ -22,6 +27,13 @@ class Penjualan extends Model
         'metode_pembayaran',
         'status',
     ];
+    /**
+     * Get gudang for this penjualan
+     */
+    public function gudang(): BelongsTo
+    {
+        return $this->belongsTo(Gudang::class, 'gudang_id');
+    }
 
     protected $casts = [
         'tanggal' => 'date',

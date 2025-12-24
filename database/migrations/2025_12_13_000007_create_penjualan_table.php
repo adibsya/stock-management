@@ -22,6 +22,8 @@ return new class extends Migration
             $table->decimal('pajak', 15, 2)->default(0);
             $table->decimal('total_bayar', 15, 2)->default(0);
             $table->string('metode_pembayaran')->default('tunai');
+            $table->enum('mode_termin', ['cash', 'termin'])->default('cash');
+            $table->date('jatuh_tempo')->nullable();
             $table->enum('status', ['selesai', 'draft'])->default('draft');
             $table->timestamps();
         });

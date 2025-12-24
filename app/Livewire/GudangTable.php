@@ -51,7 +51,6 @@ class GudangTable extends Component
     public function render()
     {
         $gudangs = Gudang::query()
-            ->withCount('barang')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('nama_gudang', 'like', '%' . $this->search . '%')

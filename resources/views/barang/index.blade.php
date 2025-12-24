@@ -1,6 +1,6 @@
 <x-layouts.app>
-    <x-slot:title>Data Barang - Ngarumi</x-slot:title>
-    <x-slot:header>Data Barang</x-slot:header>
+    <x-slot:title>Barang (Identitas)</x-slot:title>
+    <x-slot:header>Barang (Identitas)</x-slot:header>
 
-    <livewire:barang-table />
+    <livewire:barang-master-table />
 </x-layouts.app>

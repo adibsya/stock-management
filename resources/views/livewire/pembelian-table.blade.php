@@ -20,6 +20,12 @@
                     <option value="belum_lunas">Belum Lunas</option>
                 </select>
             </div>
+            <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap">
+                <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Kasir Pembelian
+            </a>
         </div>
     </div>
 
@@ -66,7 +72,7 @@
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
                             <td class="table-cell px-4 font-mono text-sm">{{ $pembelian->no_faktur_supplier ?: '-' }}</td>
                             <td class="table-cell px-4">{{ $pembelian->tanggal->format('d/m/Y') }}</td>
-                            <td class="table-cell px-4">{{ $pembelian->pemasok?->nama ?? '-' }}</td>
+                            <td class="table-cell px-4">{{ $pembelian->pemasok?->nama_supplier ?? '-' }}</td>
                             <td class="table-cell px-4 text-right font-medium">Rp {{ number_format($pembelian->total_biaya, 0, ',', '.') }}</td>
                             <td class="table-cell px-4">
                                 @if($pembelian->jatuh_tempo)

@@ -6,6 +6,7 @@ use App\Models\Barang;
 use App\Models\RiwayatStok;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Gudang;
 
 class LaporanStok extends Component
 {
@@ -15,6 +16,7 @@ class LaporanStok extends Component
     public ?int $barang_id = null;
     public string $startDate = '';
     public string $endDate = '';
+    public $gudang_id = '';
 
     public function mount(): void
     {
@@ -34,17 +36,24 @@ class LaporanStok extends Component
 
     public function render()
     {
-        // Daftar barang untuk dropdown
-        $barangs = Barang::orderBy('nama_barang')->get();
+        // Daftar barang untuk dropdown (order by master.nama_barang)
+        $barangs = Barang::with('master')->get()->sortBy(function($barang) {
+            return $barang->master->nama_barang ?? '';
+        });
 
         // Kartu stok / riwayat stok
         $riwayatStok = RiwayatStok::query()
-            ->with('barang')
+            ->with(['barang.master'])
             ->when($this->barang_id, function ($query) {
                 $query->where('barang_id', $this->barang_id);
             })
-            ->when($this->search, function ($query) {
+            ->when($this->gudang_id, function ($query) {
                 $query->whereHas('barang', function ($q) {
+                    $q->where('gudang_id', $this->gudang_id);
+                });
+            })
+            ->when($this->search, function ($query) {
+                $query->whereHas('barang.master', function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->search . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->search . '%');
                 });
@@ -60,10 +69,11 @@ class LaporanStok extends Component
             ->paginate(20);
 
         // Summary stok per barang
-        $summaryStok = Barang::query()
+        $summaryStok = Barang::with('master')
             ->when($this->barang_id, fn($q) => $q->where('id', $this->barang_id))
+            ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
             ->when($this->search, function ($query) {
-                $query->where(function ($q) {
+                $query->whereHas('master', function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->search . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->search . '%');
                 });
@@ -76,12 +86,17 @@ class LaporanStok extends Component
                 $query->when($this->startDate, fn($q) => $q->whereDate('tanggal', '>=', $this->startDate))
                     ->when($this->endDate, fn($q) => $q->whereDate('tanggal', '<=', $this->endDate));
             }], 'jumlah_keluar')
-            ->get();
+            ->get()
+            ->sortBy(function($barang) {
+                return $barang->master->nama_barang ?? '';
+            });
 
+        $gudangs = Gudang::orderBy('nama_gudang')->get();
         return view('livewire.laporan-stok', [
             'barangs' => $barangs,
             'riwayatStok' => $riwayatStok,
             'summaryStok' => $summaryStok,
+            'gudangs' => $gudangs,
         ]);
     }
 }

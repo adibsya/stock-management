@@ -65,6 +65,12 @@
         </div>
     </div>
 
+    @if($pembelian->mode_termin === 'termin')
+        <div class="card mt-8">
+            <livewire:pembelian-termin-form :pembelian="$pembelian" />
+        </div>
+    @endif
+
     <div class="mt-6">
         <a href="{{ route('pembelian.index') }}" class="btn-secondary">
             &larr; Kembali

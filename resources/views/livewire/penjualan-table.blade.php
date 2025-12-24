@@ -14,6 +14,12 @@
                 </div>
                 <input type="date" wire:model.live="startDate" class="input-field w-full md:w-40">
                 <input type="date" wire:model.live="endDate" class="input-field w-full md:w-40">
+                <select wire:model.live="gudang_id" class="input-field w-full md:w-40">
+                    <option value="">Semua Gudang</option>
+                    @foreach($gudangs as $gudang)
+                        <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
+                    @endforeach
+                </select>
                 <select wire:model.live="status" class="input-field w-full md:w-40">
                     <option value="">Semua Status</option>
                     <option value="selesai">Selesai</option>

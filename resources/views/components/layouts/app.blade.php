@@ -81,11 +81,19 @@
                     Pemasok
                 </a>
                 
+
                 <a href="{{ route('gudang.index') }}" class="sidebar-link {{ request()->routeIs('gudang.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
                     </svg>
                     Gudang
+                </a>
+
+                <a href="{{ route('stok.index') }}" class="sidebar-link {{ request()->routeIs('stok.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h18M3 7h18M3 11h18M3 15h18M3 19h18"></path>
+                    </svg>
+                    Stok
                 </a>
 
                 <div class="sidebar-section">

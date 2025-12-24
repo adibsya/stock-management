@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Penjualan;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Gudang;
 
 class PenjualanTable extends Component
 {
@@ -17,6 +18,7 @@ class PenjualanTable extends Component
     public string $sortBy = 'tanggal';
     public string $sortDirection = 'desc';
     public int $perPage = 10;
+    public $gudang_id = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -58,6 +60,9 @@ class PenjualanTable extends Component
                         });
                 });
             })
+            ->when($this->gudang_id, function ($query) {
+                $query->where('gudang_id', $this->gudang_id);
+            })
             ->when($this->status, function ($query) {
                 $query->where('status', $this->status);
             })
@@ -73,12 +78,15 @@ class PenjualanTable extends Component
         $totalPenjualan = Penjualan::query()
             ->when($this->startDate, fn($q) => $q->whereDate('tanggal', '>=', $this->startDate))
             ->when($this->endDate, fn($q) => $q->whereDate('tanggal', '<=', $this->endDate))
+            ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
             ->where('status', 'selesai')
             ->sum('total_bayar');
 
+        $gudangs = Gudang::orderBy('nama_gudang')->get();
         return view('livewire.penjualan-table', [
             'penjualans' => $penjualans,
             'totalPenjualan' => $totalPenjualan,
+            'gudangs' => $gudangs,
         ]);
     }
 }

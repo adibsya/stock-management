@@ -11,19 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('barang');
         Schema::create('barang', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_barang')->unique();
-            $table->string('nama_barang');
-            $table->string('kategori')->nullable();
+            $table->unsignedBigInteger('barang_master_id');
+            $table->foreign('barang_master_id')->references('id')->on('barang_master')->onDelete('cascade');
+            $table->foreignId('gudang_id')->constrained('gudang')->onDelete('cascade');
+            $table->foreignId('pemasok_id')->nullable()->constrained('pemasok')->nullOnDelete();
             $table->decimal('harga_beli', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2)->default(0);
             $table->integer('stok')->default(0);
             $table->integer('stok_minimum')->default(0);
-            $table->string('satuan')->nullable();
             $table->string('foto')->nullable();
-            $table->foreignId('pemasok_id')->nullable()->constrained('pemasok')->nullOnDelete();
-            $table->foreignId('gudang_id')->nullable()->constrained('gudang')->nullOnDelete();
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

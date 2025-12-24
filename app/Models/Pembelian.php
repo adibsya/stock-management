@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pembelian extends Model
 {
+    public function pembayaranPembelian()
+    {
+        return $this->hasMany(\App\Models\PembayaranPembelian::class, 'pembelian_id');
+    }
     protected $table = 'pembelian';
 
     protected $fillable = [

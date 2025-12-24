@@ -12,10 +12,18 @@ class DetailPenjualan extends Model
     protected $fillable = [
         'penjualan_id',
         'barang_id',
+        'gudang_id',
         'jumlah',
         'harga_satuan',
         'subtotal',
     ];
+    /**
+     * Get gudang for this detail penjualan
+     */
+    public function gudang(): BelongsTo
+    {
+        return $this->belongsTo(Gudang::class, 'gudang_id');
+    }
 
     protected $casts = [
         'jumlah' => 'integer',

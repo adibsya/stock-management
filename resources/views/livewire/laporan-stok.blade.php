@@ -11,10 +11,16 @@
                        placeholder="Cari barang..." 
                        class="input-with-icon-left">
             </div>
+            <select wire:model.live="gudang_id" class="input-field w-full md:w-64">
+                <option value="">Semua Gudang</option>
+                @foreach($gudangs as $gudang)
+                    <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
+                @endforeach
+            </select>
             <select wire:model.live="barang_id" class="input-field w-full md:w-64">
                 <option value="">Semua Barang</option>
                 @foreach($barangs as $barang)
-                    <option value="{{ $barang->id }}">{{ $barang->kode_barang }} - {{ $barang->nama_barang }}</option>
+                    <option value="{{ $barang->id }}">{{ $barang->kode_barang }} - {{ $barang->master->nama_barang ?? '-' }}</option>
                 @endforeach
             </select>
             <input type="date" wire:model.live="startDate" class="input-field w-full md:w-40">
@@ -29,7 +35,7 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-sm text-gray-500">{{ $summary->kode_barang }}</p>
-                        <p class="font-medium text-gray-800">{{ $summary->nama_barang }}</p>
+                        <p class="font-medium text-gray-800">{{ $summary->master->nama_barang ?? '-' }}</p>
                     </div>
                     <span class="px-2 py-1 rounded-full text-sm font-medium {{ $summary->stok <= 0 ? 'bg-red-100 text-red-700' : ($summary->stok < $summary->stok_minimum ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
                         {{ $summary->stok }} {{ $summary->satuan }}
@@ -70,7 +76,7 @@
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
                             <td class="table-cell px-4">{{ $riwayat->tanggal->format('d/m/Y') }}</td>
                             <td class="table-cell px-4">
-                                <p class="font-medium">{{ $riwayat->barang->nama_barang }}</p>
+                                <p class="font-medium">{{ $riwayat->barang->master->nama_barang ?? '-' }}</p>
                                 <p class="text-xs text-gray-500">{{ $riwayat->barang->kode_barang }}</p>
                             </td>
                             <td class="table-cell px-4">
