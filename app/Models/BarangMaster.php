@@ -46,4 +46,30 @@ class BarangMaster extends Model
     {
         return $this->hasMany(StokBarang::class, 'barang_master_id');
     }
+
+    /**
+     * Scope barang hampir habis (stok <= 5 dan > 0)
+     */
+
+    public function scopeHampirHabis($query)
+    {
+        return $query->whereHas('stok', function ($q) {
+            $q->selectRaw('barang_master_id, SUM(jumlah) as total_stok')
+              ->groupBy('barang_master_id')
+              ->havingRaw('SUM(jumlah) <= 5 AND SUM(jumlah) > 0');
+        });
+    }
+
+    /**
+     * Scope barang habis (stok <= 0)
+     */
+
+    public function scopeHabis($query)
+    {
+        return $query->whereHas('stok', function ($q) {
+            $q->selectRaw('barang_master_id, SUM(jumlah) as total_stok')
+              ->groupBy('barang_master_id')
+              ->havingRaw('SUM(jumlah) <= 0');
+        });
+    }
 }

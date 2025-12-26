@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Barang;
+use App\Models\BarangMaster;
 use App\Models\Pelanggan;
 use App\Models\Pembelian;
 use App\Models\Pengeluaran;
@@ -40,16 +40,16 @@ class DashboardController extends Controller
             ->sum('jumlah_biaya');
 
         // Barang hampir habis
-        $barangHampirHabis = Barang::hampirHabis()->count();
+        //$barangHampirHabis = BarangMaster::hampirHabis()->count();
         
         // Barang habis
-        $barangHabis = Barang::habis()->count();
+        //$barangHabis = BarangMaster::habis()->count();
 
         // Total pelanggan
         $totalPelanggan = Pelanggan::count();
 
         // Total barang
-        $totalBarang = Barang::count();
+        $totalBarang = BarangMaster::count();
 
         // Penjualan terbaru
         $penjualanTerbaru = Penjualan::with(['pelanggan', 'user'])
@@ -59,15 +59,15 @@ class DashboardController extends Controller
             ->get();
 
         // Barang terlaris bulan ini
-        $barangTerlaris = Barang::withSum(['detailPenjualan as total_terjual' => function ($query) use ($startOfMonth, $endOfMonth) {
-            $query->whereHas('penjualan', function ($q) use ($startOfMonth, $endOfMonth) {
-                $q->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                    ->where('status', 'selesai');
-            });
-        }], 'jumlah')
-            ->orderByDesc('total_terjual')
-            ->limit(5)
-            ->get();
+        //$barangTerlaris = BarangMaster::withSum(['detailPenjualan as total_terjual' => function ($query) use ($startOfMonth, $endOfMonth) {
+            //$query->whereHas('penjualan', function ($q) use ($startOfMonth, $endOfMonth) {
+                //$q->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                   // ->where('status', 'selesai');
+            //});
+        //}], 'jumlah')
+            //->orderByDesc('total_terjual')
+            //->limit(5)
+            //->get();
 
         // Grafik penjualan 7 hari terakhir
         $grafikPenjualan = [];
@@ -88,12 +88,12 @@ class DashboardController extends Controller
             'penjualanBulanIni',
             'pembelianBulanIni',
             'pengeluaranBulanIni',
-            'barangHampirHabis',
-            'barangHabis',
+            //'barangHampirHabis',
+            //'barangHabis',
             'totalPelanggan',
             'totalBarang',
             'penjualanTerbaru',
-            'barangTerlaris',
+            //'barangTerlaris',
             'grafikPenjualan'
         ));
     }

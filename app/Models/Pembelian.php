@@ -18,10 +18,18 @@ class Pembelian extends Model
         'no_faktur_supplier',
         'tanggal',
         'pemasok_id',
+        'user_id',
         'total_biaya',
         'jatuh_tempo',
         'status_bayar',
     ];
+    /**
+     * Get user (kasir) for this pembelian
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
 
     protected $casts = [
         'tanggal' => 'date',

@@ -34,9 +34,9 @@ class DetailPembelian extends Model
     /**
      * Get barang for this detail
      */
-    public function barang(): BelongsTo
+    public function barangmaster(): BelongsTo
     {
-        return $this->belongsTo(Barang::class, 'barang_id');
+        return $this->belongsTo(BarangMaster::class, 'barang_id');
     }
 
     /**

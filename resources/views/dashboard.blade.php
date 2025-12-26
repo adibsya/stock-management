@@ -51,13 +51,13 @@
             </div>
         </div>
 
-        <!-- Stok Alert -->
+        <!-- Stok Alert  -->
         <div class="card hover:shadow-lg transition-shadow">
             <div class="flex items-start justify-between gap-4">
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-500 mb-2">Stok Alert</p>
-                    <p class="text-3xl font-bold text-gray-900 mb-1">{{ $barangHampirHabis + $barangHabis }}</p>
-                    <p class="text-sm text-red-600">{{ $barangHabis }} habis, {{ $barangHampirHabis }} hampir habis</p>
+                    {{-- <p class="text-3xl font-bold text-gray-900 mb-1">{{ $barangHampirHabis + $barangHabis }}</p> --}}
+                    {{-- <p class="text-sm text-red-600">{{ $barangHabis }} habis, {{ $barangHampirHabis }} hampir habis</p> --}}
                 </div>
                 <div class="w-14 h-14 flex-shrink-0 bg-red-100 rounded-xl flex items-center justify-center">
                     <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,6 +93,7 @@
         </div>
 
         <!-- Barang Terlaris -->
+        {{--
         <div class="card">
             <h3 class="text-lg font-semibold text-gray-900 mb-6">Barang Terlaris</h3>
             <div class="space-y-4">
@@ -113,6 +114,7 @@
                 @endforelse
             </div>
         </div>
+        --}}
     </div>
 
     <!-- Transaksi Terbaru -->

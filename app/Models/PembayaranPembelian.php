@@ -12,6 +12,9 @@ class PembayaranPembelian extends Model
         'pembelian_id',
         'tanggal_bayar',
         'jumlah_bayar',
+        'jumlah',
+        'tanggal_jatuh_tempo',
+        'status',
         'metode_pembayaran',
         'catatan',
     ];

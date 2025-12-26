@@ -115,6 +115,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/create', [PembelianController::class, 'create'])->name('create');
             Route::get('/kasir', \App\Livewire\PembelianKasirForm::class)->name('kasir');
         });
+        // Kasir pembayaran termin global
+        Route::get('/termin', function() {
+            return view('pembelian.kasir-termin');
+        })->name('termin');
         Route::get('/{pembelian}', [PembelianController::class, 'show'])->name('show');
     });
 

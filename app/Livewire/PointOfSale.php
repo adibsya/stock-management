@@ -23,20 +23,27 @@ class PointOfSale extends Component
 
     public function addToCart(int $barangId): void
     {
+
         $barang = Barang::find($barangId);
-        
         if (!$barang) {
             $this->dispatch('notify', message: 'Barang tidak ditemukan!');
             return;
         }
-
         if ($barang->stok <= 0) {
             $this->dispatch('notify', message: 'Stok barang habis!');
             return;
         }
 
+        // Ambil harga dari BarangMaster jika ada
+        $harga_jual = $barang->harga_jual;
+        if ($barang->barang_master_id) {
+            $master = \App\Models\BarangMaster::find($barang->barang_master_id);
+            if ($master && $master->harga_jual) {
+                $harga_jual = $master->harga_jual;
+            }
+        }
+
         $key = array_search($barangId, array_column($this->cart, 'barang_id'));
-        
         if ($key !== false) {
             // Cek stok
             if ($this->cart[$key]['jumlah'] >= $barang->stok) {
@@ -50,9 +57,9 @@ class PointOfSale extends Component
                 'barang_id' => $barang->id,
                 'kode_barang' => $barang->kode_barang,
                 'nama_barang' => $barang->nama_barang,
-                'harga_satuan' => $barang->harga_jual,
+                'harga_satuan' => $harga_jual,
                 'jumlah' => 1,
-                'subtotal' => $barang->harga_jual,
+                'subtotal' => $harga_jual,
                 'stok' => $barang->stok,
             ];
         }

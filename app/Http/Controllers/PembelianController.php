@@ -22,7 +22,7 @@ class PembelianController extends Controller
 
     public function show(Pembelian $pembelian): View
     {
-        $pembelian->load(['pemasok', 'detailPembelian.barang']);
+        $pembelian->load(['pemasok', 'detailPembelian.barangmaster']);
         return view('pembelian.show', compact('pembelian'));
     }
 }

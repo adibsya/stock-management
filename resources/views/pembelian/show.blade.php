@@ -8,9 +8,14 @@
                 <h2 class="text-2xl font-bold text-gray-800">{{ $pembelian->no_faktur_supplier ?: 'Tanpa Faktur' }}</h2>
                 <p class="text-gray-500">{{ $pembelian->tanggal->format('d F Y') }}</p>
             </div>
-            <span class="px-3 py-1 rounded-full text-sm font-medium {{ $pembelian->status_bayar === 'lunas' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                {{ $pembelian->status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas' }}
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-medium {{ $pembelian->status_bayar === 'lunas' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                    {{ $pembelian->status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas' }}
+                </span>
+                @if(Str::contains($pembelian->mode_termin, 'termin'))
+                    <a href="{{ route('pembelian.termin', $pembelian->id) }}" class="btn-primary">Pembayaran Termin</a>
+                @endif
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -47,8 +52,8 @@
                     @foreach($pembelian->detailPembelian as $index => $detail)
                         <tr class="border-b border-gray-100">
                             <td class="table-cell px-4">{{ $index + 1 }}</td>
-                            <td class="table-cell px-4">{{ $detail->barang->kode_barang }}</td>
-                            <td class="table-cell px-4">{{ $detail->barang->nama_barang }}</td>
+                            <td class="table-cell px-4">{{ $detail->barangmaster->kode_barang }}</td>
+                            <td class="table-cell px-4">{{ $detail->barangmaster->nama_barang }}</td>
                             <td class="table-cell px-4 text-right">Rp {{ number_format($detail->harga_beli, 0, ',', '.') }}</td>
                             <td class="table-cell px-4 text-center">{{ $detail->jumlah }}</td>
                             <td class="table-cell px-4 text-right">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>

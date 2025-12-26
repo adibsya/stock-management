@@ -20,12 +20,25 @@
                     <option value="belum_lunas">Belum Lunas</option>
                 </select>
             </div>
-            <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap">
-                <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Kasir Pembelian
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap">
+                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Kasir Pembelian
+                </a>
+                @php
+                    $adaTermin = isset($pembelians) && $pembelians->where('status_bayar', 'belum_lunas')->where('jatuh_tempo', '!=', null)->count() > 0;
+                @endphp
+                @if($adaTermin)
+                <a href="{{ route('pembelian.termin') }}" class="btn-success whitespace-nowrap">
+                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-5 4v2m0 0v2m0-2h.01" />
+                    </svg>
+                    Kasir Pembayaran Termin
+                </a>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -68,6 +81,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php use Illuminate\Support\Str; @endphp
                     @forelse($pembelians as $pembelian)
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
                             <td class="table-cell px-4 font-mono text-sm">{{ $pembelian->no_faktur_supplier ?: '-' }}</td>
@@ -89,12 +103,19 @@
                                 </span>
                             </td>
                             <td class="table-cell px-4 text-center">
-                                <a href="{{ route('pembelian.show', $pembelian) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition inline-block">
+                                <a href="{{ route('pembelian.show', $pembelian) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition inline-block" title="Detail Pembelian">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </a>
+                                @if($pembelian->status_bayar === 'belum_lunas' && $pembelian->jatuh_tempo)
+                                    <a href="{{ route('pembelian.termin', $pembelian->id) }}" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition inline-block" title="Pembayaran Termin">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-5 4v2m0 0v2m0-2h.01" />
+                                        </svg>
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty
