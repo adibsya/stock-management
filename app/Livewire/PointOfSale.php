@@ -18,36 +18,49 @@ class PointOfSale extends Component
     public string $diskon_transaksi = '0';
     public string $bayar = '0';
     public ?int $gudang_id = null;
+    public int $jumlah_cicilan = 1;
+    public array $termin_cicilan = [];
 
     protected $listeners = ['refreshCart' => '$refresh'];
 
+    public function updatedJumlahCicilan()
+    {
+        // Initialize termin_cicilan array based on jumlah_cicilan
+        $this->termin_cicilan = [];
+        $jumlahPerCicilan = $this->total > 0 ? round($this->total / $this->jumlah_cicilan, 2) : 0;
+        
+        for ($i = 1; $i <= $this->jumlah_cicilan; $i++) {
+            $this->termin_cicilan[$i] = [
+                'jumlah' => $jumlahPerCicilan,
+                'tanggal_jatuh_tempo' => null,
+            ];
+        }
+    }
+
     public function addToCart(int $barangId): void
     {
-
-        $barang = Barang::find($barangId);
+        // Load barang dengan master untuk mendapatkan info lengkap
+        $barang = Barang::with('master')->find($barangId);
         if (!$barang) {
             $this->dispatch('notify', message: 'Barang tidak ditemukan!');
             return;
         }
+        
+        // Cek stok real-time
         if ($barang->stok <= 0) {
             $this->dispatch('notify', message: 'Stok barang habis!');
             return;
         }
 
-        // Ambil harga dari BarangMaster jika ada
-        $harga_jual = $barang->harga_jual;
-        if ($barang->barang_master_id) {
-            $master = \App\Models\BarangMaster::find($barang->barang_master_id);
-            if ($master && $master->harga_jual) {
-                $harga_jual = $master->harga_jual;
-            }
-        }
+        // Ambil harga dari BarangMaster
+        $harga_jual = $barang->master->harga_jual ?? $barang->harga_jual;
 
+        // Cek apakah barang sudah ada di cart
         $key = array_search($barangId, array_column($this->cart, 'barang_id'));
         if ($key !== false) {
-            // Cek stok
+            // Cek stok sebelum menambah
             if ($this->cart[$key]['jumlah'] >= $barang->stok) {
-                $this->dispatch('notify', message: 'Stok tidak mencukupi!');
+                $this->dispatch('notify', message: 'Stok tidak mencukupi! Stok tersedia: ' . $barang->stok);
                 return;
             }
             $this->cart[$key]['jumlah']++;
@@ -57,6 +70,7 @@ class PointOfSale extends Component
                 'barang_id' => $barang->id,
                 'kode_barang' => $barang->kode_barang,
                 'nama_barang' => $barang->nama_barang,
+                'satuan' => $barang->satuan,
                 'harga_satuan' => $harga_jual,
                 'jumlah' => 1,
                 'subtotal' => $harga_jual,
@@ -65,6 +79,7 @@ class PointOfSale extends Component
         }
 
         $this->searchBarang = '';
+        $this->dispatch('notify', message: 'Berhasil ditambahkan ke keranjang!');
     }
 
     public function updateQty(int $index, int $qty): void
@@ -76,12 +91,15 @@ class PointOfSale extends Component
             return;
         }
 
-        if ($qty > $this->cart[$index]['stok']) {
-            $this->dispatch('notify', message: 'Stok tidak mencukupi!');
+        // Cek stok real-time dari database
+        $barang = Barang::find($this->cart[$index]['barang_id']);
+        if (!$barang || $qty > $barang->stok) {
+            $this->dispatch('notify', message: 'Stok tidak mencukupi! Stok tersedia: ' . ($barang ? $barang->stok : 0));
             return;
         }
 
         $this->cart[$index]['jumlah'] = $qty;
+        $this->cart[$index]['stok'] = $barang->stok; // Update stok di cart
         $this->cart[$index]['subtotal'] = $qty * $this->cart[$index]['harga_satuan'];
     }
 
@@ -127,10 +145,26 @@ class PointOfSale extends Component
             return;
         }
 
-        $bayar = (float) $this->bayar;
-        if ($bayar < $this->total) {
-            $this->dispatch('notify', message: 'Pembayaran kurang!');
+        if (!$this->gudang_id) {
+            $this->dispatch('notify', message: 'Pilih gudang terlebih dahulu!');
             return;
+        }
+
+        // Validasi untuk termin
+        if ($this->metode_pembayaran === 'termin') {
+            foreach ($this->termin_cicilan as $key => $cicilan) {
+                if (empty($cicilan['tanggal_jatuh_tempo'])) {
+                    $this->dispatch('notify', message: 'Lengkapi tanggal jatuh tempo untuk semua cicilan!', type: 'error');
+                    return;
+                }
+            }
+        } else {
+            // Validasi untuk non-termin
+            $bayar = (float) $this->bayar;
+            if ($bayar < $this->total) {
+                $this->dispatch('notify', message: 'Pembayaran kurang!');
+                return;
+            }
         }
 
         try {
@@ -154,7 +188,24 @@ class PointOfSale extends Component
                 'metode_pembayaran' => $this->metode_pembayaran,
             ]);
 
+            // Jika metode pembayaran termin, simpan detail cicilan
+            if ($this->metode_pembayaran === 'termin') {
+                foreach ($this->termin_cicilan as $key => $cicilan) {
+                    \App\Models\PembayaranPenjualan::create([
+                        'penjualan_id' => $penjualan->id,
+                        'tanggal_bayar' => $cicilan['tanggal_jatuh_tempo'],
+                        'jumlah_bayar' => $cicilan['jumlah'],
+                        'metode_pembayaran' => 'termin',
+                        'catatan' => 'Cicilan ke-' . $key . ' dari ' . $this->jumlah_cicilan . ' cicilan',
+                    ]);
+                }
+            }
+
             $this->clearCart();
+            $this->metode_pembayaran = 'tunai';
+            $this->jumlah_cicilan = 1;
+            $this->termin_cicilan = [];
+            $this->bayar = '0';
             $this->dispatch('notify', message: 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
 
         } catch (\Exception $e) {
@@ -175,19 +226,24 @@ class PointOfSale extends Component
             }
         }
 
-        $barangs = Barang::query()
+        // Query barang dengan stok > 0
+        $barangsQuery = Barang::query()
+            ->with(['master', 'gudang'])
             ->where('stok', '>', 0)
             ->when($this->gudang_id, function ($query) {
                 $query->where('gudang_id', $this->gudang_id);
             })
             ->when($this->searchBarang, function ($query) {
-                $query->where(function ($q) {
+                $query->whereHas('master', function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->searchBarang . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->searchBarang . '%');
                 });
-            })
-            ->limit(20)
-            ->get();
+            });
+
+        // Kelompokkan berdasarkan kategori dari master
+        $barangs = $barangsQuery->get()->groupBy(function($barang) {
+            return $barang->master->kategori ?? 'Lainnya';
+        });
 
         $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
 

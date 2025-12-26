@@ -5,7 +5,6 @@ use App\Livewire\StokBarangForm;
 use App\Livewire\BarangMasterForm;
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GudangController;
 use App\Http\Controllers\LaporanController;
@@ -68,10 +67,10 @@ Route::middleware('auth')->group(function () {
 
     // Stok Barang (per Gudang)
     Route::prefix('stok-barang')->name('stok-barang.')->group(function () {
-        Route::get('/', [BarangController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\StokBarangTable::class)->name('index');
         Route::middleware('role:admin')->group(function () {
-            Route::get('/create', [BarangController::class, 'create'])->name('create');
-            Route::get('/{barang}/edit', [BarangController::class, 'edit'])->name('edit');
+            Route::get('/create', StokBarangForm::class)->name('create');
+            Route::get('/{barang}/edit', StokBarangForm::class)->name('edit');
         });
     });
 

@@ -163,9 +163,9 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 ml-64 flex flex-col min-h-screen">
+        <main class="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
             <!-- Top Header -->
-            <header class="top-header">
+            <header class="top-header flex-shrink-0">
                 <div class="flex items-center justify-between px-6 py-4">
                     <div>
                         <h1 class="page-title">{{ $header }}</h1>
@@ -218,12 +218,12 @@
             @endif
 
             <!-- Page Content -->
-            <div class="flex-1 p-6">
+            <div class="flex-1 overflow-y-auto p-6">
                 {{ $slot }}
             </div>
 
             <!-- Footer -->
-            <footer class="px-6 py-4 text-center text-xs text-gray-400 border-t border-gray-100 bg-white/50">
+            <footer class="flex-shrink-0 px-6 py-4 text-center text-xs text-gray-400 border-t border-gray-100 bg-white/50">
                 &copy; {{ date('Y') }} Ngarumi POS. All rights reserved.
             </footer>
         </main>
@@ -234,11 +234,70 @@
         document.addEventListener('livewire:init', () => {
             Livewire.on('notify', (event) => {
                 const message = event.message || event[0]?.message;
+                const type = event.type || event[0]?.type || 'success';
+                
                 if (message) {
-                    alert(message);
+                    showToast(message, type);
                 }
             });
         });
+
+        function showToast(message, type = 'success') {
+            // Remove existing toast if any
+            const existing = document.getElementById('livewire-toast');
+            if (existing) existing.remove();
+
+            // Determine colors based on type
+            const config = {
+                success: {
+                    borderColor: 'border-emerald-200',
+                    bgColor: 'bg-emerald-100',
+                    iconColor: 'text-emerald-500',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+                },
+                error: {
+                    borderColor: 'border-red-200',
+                    bgColor: 'bg-red-100',
+                    iconColor: 'text-red-500',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>'
+                },
+                warning: {
+                    borderColor: 'border-yellow-200',
+                    bgColor: 'bg-yellow-100',
+                    iconColor: 'text-yellow-500',
+                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'
+                }
+            };
+
+            const selectedConfig = config[type] || config.success;
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.id = 'livewire-toast';
+            toast.className = `fixed top-4 right-4 z-50 flex items-center gap-3 bg-white border ${selectedConfig.borderColor} shadow-lg rounded-lg px-4 py-3 fade-in`;
+            toast.innerHTML = `
+                <div class="w-8 h-8 ${selectedConfig.bgColor} rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 ${selectedConfig.iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${selectedConfig.icon}
+                    </svg>
+                </div>
+                <span class="text-sm text-gray-700">${message}</span>
+                <button onclick="this.parentElement.remove()" class="ml-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (toast && toast.parentElement) {
+                    toast.remove();
+                }
+            }, 4000);
+        }
     </script>
 </body>
 </html>

@@ -7,10 +7,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('detail_pembelian', function (Blueprint $table) {
-            $table->foreignId('barang_id')
-                  ->after('pembelian_id')
-                  ->constrained('barang_master')
-                  ->cascadeOnDelete();
+            if (!Schema::hasColumn('detail_pembelian', 'barang_id')) {
+                $table->foreignId('barang_id')
+                      ->after('pembelian_id')
+                      ->constrained('barang_master')
+                      ->cascadeOnDelete();
+            }
         });
     }
 

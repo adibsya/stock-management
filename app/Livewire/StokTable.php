@@ -27,11 +27,12 @@ class StokTable extends Component
         }
 
         // Superadmin: tampilkan semua stok, Admin: hanya stok di gudang miliknya
-        if (method_exists($user, 'isSuperAdmin') && !$user->isSuperAdmin()) {
-            if (property_exists($user, 'gudang_id') && $user->gudang_id) {
+        if ($user && method_exists($user, 'isSuperAdmin') && !$user->isSuperAdmin()) {
+            if ($user->gudang_id) {
                 $query->where('gudang_id', $user->gudang_id);
             } else {
-                $query->whereRaw('1=0'); // Tidak tampilkan apapun jika admin tidak punya gudang
+                // Tidak tampilkan apapun jika admin tidak punya gudang
+                $query->whereRaw('1=0');
             }
         }
 
