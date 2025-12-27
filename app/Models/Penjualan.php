@@ -98,6 +98,57 @@ class Penjualan extends Model
     {
         return $this->status === 'draft';
     }
+    
+    /**
+     * Check if penjualan is termin
+     */
+    public function isTermin(): bool
+    {
+        return $this->status === 'termin' || $this->metode_pembayaran === 'termin';
+    }
+    
+    /**
+     * Get total pembayaran termin yang sudah lunas
+     */
+    public function getTotalTerminLunas(): float
+    {
+        return $this->pembayaranPenjualan()
+            ->where('status_bayar', 'lunas')
+            ->sum('jumlah_bayar');
+    }
+    
+    /**
+     * Get jumlah cicilan yang sudah lunas
+     */
+    public function getJumlahCicilanLunas(): int
+    {
+        return $this->pembayaranPenjualan()
+            ->where('status_bayar', 'lunas')
+            ->count();
+    }
+    
+    /**
+     * Get total cicilan
+     */
+    public function getTotalCicilan(): int
+    {
+        return $this->pembayaranPenjualan()->count();
+    }
+    
+    /**
+     * Get status termin dalam format "a/b"
+     */
+    public function getStatusTerminLabel(): string
+    {
+        if (!$this->isTermin()) {
+            return ucfirst($this->status);
+        }
+        
+        $lunas = $this->getJumlahCicilanLunas();
+        $total = $this->getTotalCicilan();
+        
+        return "Termin {$lunas}/{$total}";
+    }
 
     /**
      * Generate unique no faktur

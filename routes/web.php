@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
     // Transaksi - Penjualan
     Route::prefix('penjualan')->name('penjualan.')->group(function () {
         Route::get('/', [PenjualanController::class, 'index'])->name('index');
+        Route::get('/termin/{penjualan}', \App\Livewire\PenjualanTerminUpdate::class)->name('termin.update');
         Route::get('/{penjualan}', [PenjualanController::class, 'show'])->name('show');
     });
 

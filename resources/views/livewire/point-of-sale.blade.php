@@ -183,7 +183,7 @@
                 </label>
                 <div class="input-with-prefix">
                     <span class="input-prefix">Rp</span>
-                    <input type="number" wire:model.live="diskon_transaksi" class="input-field" placeholder="0">
+                    <input type="number" wire:model.blur="diskon_transaksi" class="input-field" placeholder="0">
                 </div>
             </div>
 
@@ -283,9 +283,21 @@
                 @else
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Bayar</label>
-                        <div class="input-with-prefix">
+                        <div class="input-with-prefix mb-2">
                             <span class="input-prefix">Rp</span>
-                            <input type="number" wire:model.live="bayar" class="input-field" placeholder="0">
+                            <input type="number" wire:model.blur="bayar" class="input-field" placeholder="0">
+                        </div>
+                        <!-- Quick Amount Buttons -->
+                        <div class="grid grid-cols-3 gap-2 mb-2">
+                            <button type="button" wire:click="$set('bayar', {{ $this->total }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                                Pas
+                            </button>
+                            <button type="button" wire:click="$set('bayar', {{ ceil($this->total / 50000) * 50000 }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                                50rb
+                            </button>
+                            <button type="button" wire:click="$set('bayar', {{ ceil($this->total / 100000) * 100000 }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                                100rb
+                            </button>
                         </div>
                     </div>
                     <div class="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-lg">

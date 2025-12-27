@@ -176,6 +176,7 @@ class PointOfSale extends Component
                     'barang_id' => $item['barang_id'],
                     'jumlah' => $item['jumlah'],
                     'harga_satuan' => $item['harga_satuan'],
+                    'gudang_id' => $this->gudang_id,
                 ];
             }, $this->cart);
 
@@ -196,6 +197,7 @@ class PointOfSale extends Component
                         'tanggal_bayar' => $cicilan['tanggal_jatuh_tempo'],
                         'jumlah_bayar' => $cicilan['jumlah'],
                         'metode_pembayaran' => 'termin',
+                        'status_bayar' => 'pending',
                         'catatan' => 'Cicilan ke-' . $key . ' dari ' . $this->jumlah_cicilan . ' cicilan',
                     ]);
                 }
@@ -206,9 +208,24 @@ class PointOfSale extends Component
             $this->jumlah_cicilan = 1;
             $this->termin_cicilan = [];
             $this->bayar = '0';
+            
+            // Log untuk debugging
+            \Log::info('Transaksi berhasil disimpan', [
+                'penjualan_id' => $penjualan->id,
+                'no_faktur' => $penjualan->no_faktur,
+                'status' => $penjualan->status,
+                'metode_pembayaran' => $penjualan->metode_pembayaran,
+                'total_bayar' => $penjualan->total_bayar,
+            ]);
+            
+            // Redirect ke halaman penjualan dengan pesan sukses
+            session()->flash('success', 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
             $this->dispatch('notify', message: 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
 
         } catch (\Exception $e) {
+            \Log::error('Error saat menyimpan transaksi: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->dispatch('notify', message: 'Error: ' . $e->getMessage());
         }
     }

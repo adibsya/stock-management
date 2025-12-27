@@ -19,6 +19,8 @@ class PenjualanTable extends Component
     public string $sortDirection = 'desc';
     public int $perPage = 10;
     public $gudang_id = '';
+    
+    protected $listeners = ['$refresh'];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -51,7 +53,7 @@ class PenjualanTable extends Component
     public function render()
     {
         $penjualans = Penjualan::query()
-            ->with(['pelanggan', 'user'])
+            ->with(['pelanggan', 'user', 'pembayaranPenjualan'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('no_faktur', 'like', '%' . $this->search . '%')
@@ -79,7 +81,7 @@ class PenjualanTable extends Component
             ->when($this->startDate, fn($q) => $q->whereDate('tanggal', '>=', $this->startDate))
             ->when($this->endDate, fn($q) => $q->whereDate('tanggal', '<=', $this->endDate))
             ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
-            ->where('status', 'selesai')
+            ->whereIn('status', ['selesai', 'termin'])
             ->sum('total_bayar');
 
         $gudangs = Gudang::orderBy('nama_gudang')->get();

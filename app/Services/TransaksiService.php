@@ -50,7 +50,7 @@ class TransaksiService
                 'pajak' => $pajak,
                 'total_bayar' => $totalBayar,
                 'metode_pembayaran' => $data['metode_pembayaran'] ?? 'tunai',
-                'status' => $data['status'] ?? 'selesai',
+                'status' => $data['status'] ?? ($data['metode_pembayaran'] === 'termin' ? 'termin' : 'selesai'),
             ]);
 
             // Simpan detail penjualan dan update stok

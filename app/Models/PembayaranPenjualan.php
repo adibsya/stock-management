@@ -13,6 +13,7 @@ class PembayaranPenjualan extends Model
         'tanggal_bayar',
         'jumlah_bayar',
         'metode_pembayaran',
+        'status_bayar',
         'catatan',
     ];
 
