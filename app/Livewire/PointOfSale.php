@@ -23,6 +23,51 @@ class PointOfSale extends Component
 
     protected $listeners = ['refreshCart' => '$refresh'];
 
+    /**
+     * Hook saat diskon diubah - validasi cart terlebih dahulu
+     */
+    public function updatedDiskonTransaksi(): void
+    {
+        $this->validateCart();
+    }
+
+    /**
+     * Hook saat bayar diubah - validasi cart terlebih dahulu
+     */
+    public function updatedBayar(): void
+    {
+        $this->validateCart();
+    }
+
+    /**
+     * Hook saat gudang diubah - kosongkan cart karena barang berbeda per gudang
+     * Hanya clear cart jika memang ada barang dan user yang ubah
+     */
+    public function updatedGudangId($value): void
+    {
+        // Hanya kosongkan cart jika ada item dan gudang benar-benar berubah
+        if (!empty($this->cart)) {
+            // Cek apakah ada barang yang tidak sesuai dengan gudang baru
+            $hasInvalidItems = false;
+            foreach ($this->cart as $item) {
+                $barang = Barang::where('id', $item['barang_id'])
+                    ->where('gudang_id', $value)
+                    ->first();
+                if (!$barang) {
+                    $hasInvalidItems = true;
+                    break;
+                }
+            }
+            
+            if ($hasInvalidItems) {
+                $this->cart = [];
+                $this->bayar = '0';
+                $this->diskon_transaksi = '0';
+                $this->dispatch('notify', message: 'Keranjang dikosongkan karena gudang berubah.');
+            }
+        }
+    }
+
     public function updatedJumlahCicilan()
     {
         // Initialize termin_cicilan array based on jumlah_cicilan
@@ -138,6 +183,53 @@ class PointOfSale extends Component
         return max(0, $bayar - $this->total);
     }
 
+    /**
+     * Set nilai bayar berdasarkan opsi quick amount
+     * Method ini menghindari issue saat menggunakan $set() langsung di blade
+     */
+    public function setBayar(string $type): void
+    {
+        // Validasi cart - hapus item yang barangnya sudah tidak ada di database
+        $this->validateCart();
+
+        $total = $this->total;
+        
+        switch ($type) {
+            case 'pas':
+                $this->bayar = (string) $total;
+                break;
+            case '50rb':
+                $this->bayar = (string) (ceil($total / 50000) * 50000);
+                break;
+            case '100rb':
+                $this->bayar = (string) (ceil($total / 100000) * 100000);
+                break;
+            default:
+                $this->bayar = (string) $total;
+        }
+    }
+
+    /**
+     * Validasi cart dan hapus item yang barangnya sudah tidak ada di database
+     */
+    protected function validateCart(): void
+    {
+        $validCart = [];
+        foreach ($this->cart as $item) {
+            $barang = Barang::find($item['barang_id']);
+            if ($barang) {
+                // Update stok terbaru
+                $item['stok'] = $barang->stok;
+                $validCart[] = $item;
+            }
+        }
+        
+        if (count($validCart) !== count($this->cart)) {
+            $this->cart = $validCart;
+            $this->dispatch('notify', message: 'Beberapa barang telah dihapus dari keranjang karena sudah tidak tersedia.');
+        }
+    }
+
     public function prosesTransaksi(): void
     {
         if (empty($this->cart)) {
@@ -239,7 +331,10 @@ class PointOfSale extends Component
         } elseif ($user->isAdmin()) {
             if ($user->gudang) {
                 $gudangs = collect([$user->gudang]);
-                $this->gudang_id = $user->gudang->id;
+                // Hanya set gudang_id jika belum ada, untuk mencegah trigger updatedGudangId
+                if ($this->gudang_id === null) {
+                    $this->gudang_id = $user->gudang->id;
+                }
             }
         }
 

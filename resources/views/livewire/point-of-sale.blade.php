@@ -289,13 +289,13 @@
                         </div>
                         <!-- Quick Amount Buttons -->
                         <div class="grid grid-cols-3 gap-2 mb-2">
-                            <button type="button" wire:click="$set('bayar', {{ $this->total }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                            <button type="button" wire:click="setBayar('pas')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
                                 Pas
                             </button>
-                            <button type="button" wire:click="$set('bayar', {{ ceil($this->total / 50000) * 50000 }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                            <button type="button" wire:click="setBayar('50rb')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
                                 50rb
                             </button>
-                            <button type="button" wire:click="$set('bayar', {{ ceil($this->total / 100000) * 100000 }})" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
+                            <button type="button" wire:click="setBayar('100rb')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-medium">
                                 100rb
                             </button>
                         </div>
