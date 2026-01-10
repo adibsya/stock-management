@@ -19,10 +19,16 @@ class Pembelian extends Model
         'tanggal',
         'pemasok_id',
         'user_id',
+        'gudang_id',
         'total_biaya',
         'jatuh_tempo',
         'status_bayar',
     ];
+
+    public function gudang(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Gudang::class, 'gudang_id');
+    }
     /**
      * Get user (kasir) for this pembelian
      */

@@ -51,10 +51,15 @@ Route::middleware('auth')->group(function () {
             Route::put('/{user}', [UserController::class, 'update'])->name('update');
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         });
+
+        // Mutasi Stok
+        Route::get('/mutasi-stok', function () {
+            return view('mutasi-stok');
+        })->name('mutasi-stok.index');
     });
 
     // POS / Kasir - Hanya Super Admin dan Admin
-    Route::get('/pos', [PosController::class, 'index'])->name('pos')->middleware('role:admin');
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index')->middleware('role:admin');
 
     // Master Data - Barang
     // Barang (Identitas)
@@ -74,6 +79,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/{barang}/edit', [BarangController::class, 'edit'])->name('edit');
         });
     });
+
+    // Kasir pembayaran termin penjualan global (Livewire)
+    Route::get('/penjualan-termin', App\Livewire\PenjualanTerminForm::class)->name('penjualan-termin.index');
+    // Kasir pembayaran termin penjualan (Kasir Form)
+    Route::get('/penjualan-termin/kasir/{penjualan}', App\Livewire\PenjualanKasirForm::class)->name('penjualan-termin.kasir');
 
     // Master Data - Pelanggan
     Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
@@ -106,6 +116,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('penjualan')->name('penjualan.')->group(function () {
         Route::get('/', [PenjualanController::class, 'index'])->name('index');
         Route::get('/{penjualan}', [PenjualanController::class, 'show'])->name('show');
+        Route::get('/{penjualan}/print', [PenjualanController::class, 'print'])->name('print');
+    });
+
+    // Transaksi - Retur
+    Route::prefix('retur')->name('retur.')->group(function () {
+        Route::get('/', App\Livewire\ReturTable::class)->name('index');
     });
 
     // Transaksi - Pembelian
@@ -119,15 +135,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/termin', function() {
             return view('pembelian.kasir-termin');
         })->name('termin');
+        // Route pembayaran termin per termin
+        Route::get('/termin/{termin}/bayar', App\Livewire\PembayaranTerminPenjualanBayarForm::class)
+            ->name('pembayaran-termin.bayar');
         Route::get('/{pembelian}', [PembelianController::class, 'show'])->name('show');
     });
 
     // Transaksi - Pengeluaran
     Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
-        Route::get('/', [PengeluaranController::class, 'index'])->name('index');
+        Route::get('/', App\Livewire\PengeluaranTable::class)->name('index');
         Route::middleware('role:admin')->group(function () {
-            Route::get('/create', [PengeluaranController::class, 'create'])->name('create');
-            Route::get('/{pengeluaran}/edit', [PengeluaranController::class, 'edit'])->name('edit');
+            Route::get('/create', App\Livewire\PengeluaranForm::class)->name('create');
+            Route::get('/{pengeluaran}/edit', App\Livewire\PengeluaranForm::class)->name('edit');
         });
     });
 
@@ -135,6 +154,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/laba-rugi', [LaporanController::class, 'labaRugi'])->name('laba-rugi');
         Route::get('/stok', [LaporanController::class, 'stok'])->name('stok');
+        Route::get('/pembelian', App\Livewire\LaporanPembelian::class)->name('pembelian');
     });
 
     // Master Data - Barang Master
@@ -143,8 +163,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', BarangMasterForm::class)->name('create');
         Route::get('/{barangMaster}/edit', BarangMasterForm::class)->name('edit');
     });
+    // Termin Penjualan
+    Route::get('/penjualan-termin', App\Livewire\PenjualanTerminTable::class)->name('penjualan-termin.index');
 
     Route::resource('barang-master', BarangMasterController::class);
+
+    Route::get('/profil', function () {
+        return view('profil');
+    })->name('profil');
+    Route::post('/profil/foto', [\App\Http\Controllers\ProfilController::class, 'updateFoto'])->name('profil.foto');
 });
 
 require __DIR__.'/stok.php';

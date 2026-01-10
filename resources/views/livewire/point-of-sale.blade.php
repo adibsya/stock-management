@@ -16,55 +16,102 @@
 
         <!-- Product Grid -->
         <div class="card-compact flex-1 overflow-y-auto">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                @forelse($barangs as $barang)
-                    <button wire:click="addToCart({{ $barang->id }})" 
-                            class="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-left">
-                        <p class="font-medium text-gray-800 truncate">{{ $barang->nama_barang }}</p>
-                        <p class="text-xs text-gray-500">{{ $barang->kode_barang }}</p>
-                        <p class="text-blue-600 font-bold mt-2">Rp {{ number_format($barang->harga_jual, 0, ',', '.') }}</p>
-                        <p class="text-xs text-gray-400 mt-1">Stok: {{ $barang->stok }} {{ $barang->satuan }}</p>
-                    </button>
-                @empty
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" wire:poll.5s>
+                @if(!$gudang_id)
                     <div class="col-span-full py-8 text-center text-gray-500">
-                        Tidak ada barang ditemukan
+                        Pilih gudang terlebih dahulu
                     </div>
-                @endforelse
+                @else
+                    @forelse($barangs as $barang)
+                        @php
+                            $stok = $barang->stok->first();
+                            $jumlahStok = $stok ? $stok->jumlah : 0;
+                        @endphp
+                        <button wire:click="addToCart({{ $barang->id }})"
+                            class="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-left relative group"
+                            @if($jumlahStok <= 0) disabled style="opacity:0.5;cursor:not-allowed;" @endif>
+                            <div class="flex flex-col h-full">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-800 truncate">{{ $barang->nama_barang }}</p>
+                                    <p class="text-xs text-gray-500">{{ $barang->kode_barang }}</p>
+                                    <p class="text-blue-600 font-bold mt-2">Rp {{ number_format($barang->harga_jual, 0, ',', '.') }}</p>
+                                </div>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">Stok: <span class="font-bold text-gray-700">{{ $jumlahStok }}</span> {{ $barang->satuan }}</span>
+                                    @if($jumlahStok <= 0)
+                                        <span class="text-xs text-red-500 font-semibold">0 / Habis</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </button>
+                    @empty
+                        <div class="col-span-full py-8 text-center text-gray-500">
+                            Tidak ada barang ditemukan
+                        </div>
+                    @endforelse
+                @endif
             </div>
         </div>
     </div>
 
     <!-- Right: Cart -->
     <div class="w-1/3 flex flex-col">
-        <div class="card flex-1 flex flex-col">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Keranjang</h3>
-            
+        <div class="card flex-1 flex flex-col shadow-lg bg-white rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 tracking-wide">Keranjang</h3>
             <!-- Cart Items -->
-            <div class="flex-1 overflow-y-auto space-y-3 mb-4">
+            <div class="flex-1 overflow-y-auto space-y-4 mb-6">
                 @forelse($cart as $index => $item)
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl shadow-sm">
                         <div class="flex-1">
-                            <p class="font-medium text-gray-800 text-sm">{{ $item['nama_barang'] }}</p>
-                            <p class="text-xs text-gray-500">Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}</p>
+                            <p class="font-semibold text-gray-900 text-base leading-tight">{{ $item['nama_barang'] }}</p>
+                            <p class="text-xs text-gray-400">Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }}
+                                @php
+                                    $isNuklerr = false;
+                                    $nama = strtolower($item['nama_barang'] ?? '');
+                                    $kode = strtolower($item['kode_barang'] ?? '');
+                                    if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
+                                        $isNuklerr = true;
+                                    }
+                                @endphp
+                                @if($isNuklerr)
+                                    @if(isset($item['bonus']) && $item['bonus'] > 0)
+                                        <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold text-xs">Bonus +{{ $item['bonus'] }} pcs</span>
+                                    @endif
+                                    @if($item['jumlah'] >= 600)
+                                        <span class="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold text-xs">Harga khusus 600 pcs</span>
+                                    @elseif($item['jumlah'] >= 100)
+                                        <span class="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold text-xs">Harga khusus 100 pcs</span>
+                                    @elseif($item['jumlah'] >= 20)
+                                        <span class="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold text-xs">Harga khusus 20 pcs</span>
+                                    @endif
+                                @endif
+                            </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] - 1 }})" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                -
-                            </button>
-                            <span class="w-8 text-center">{{ $item['jumlah'] }}</span>
-                            <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] + 1 }})" class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                +
-                            </button>
+                            <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] - 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">-</button>
+                            <input type="number" min="1" :max="$item['stok']" class="w-14 text-center text-lg font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ $item['jumlah'] }}"
+                                wire:change="updateQty({{ $index }}, $event.target.value)"
+                                wire:keydown.enter="updateQty({{ $index }}, $event.target.value)"
+                                >
+                            <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] + 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">+</button>
+                            @php
+                                $isNuklerr = false;
+                                $nama = strtolower($item['nama_barang'] ?? '');
+                                $kode = strtolower($item['kode_barang'] ?? '');
+                                if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
+                                    $isNuklerr = true;
+                                }
+                            @endphp
                         </div>
-                        <p class="w-24 text-right font-medium">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</p>
-                        <button wire:click="removeFromCart({{ $index }})" class="text-red-500 hover:text-red-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <p class="w-28 text-right font-bold text-lg text-gray-800">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</p>
+                        <button wire:click="removeFromCart({{ $index }})" class="w-8 h-8 flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
                 @empty
-                    <div class="py-8 text-center text-gray-500">
+                    <div class="py-10 text-center text-gray-400 text-lg font-semibold">
                         Keranjang kosong
                     </div>
                 @endforelse
@@ -93,29 +140,57 @@
                 <select wire:model="pelanggan_id" class="input-field">
                     <option value="">Pelanggan Umum</option>
                     @foreach($pelanggans as $pelanggan)
-                        <option value="{{ $pelanggan->id }}">{{ $pelanggan->nama }}</option>
+                        <option value="{{ $pelanggan->id }}">{{ $pelanggan->nama_pelanggan }}</option>
                     @endforeach
                 </select>
             </div>
 
             <!-- Diskon -->
+            <!-- Pembayaran Termin -->
             <div class="mb-4">
-                <label class="block text-sm text-gray-600 mb-1">Diskon</label>
-                <div class="input-with-prefix">
-                    <span class="input-prefix">Rp</span>
-                    <input type="number" wire:model.live="diskon_transaksi" class="input-field" placeholder="0">
+                <label class="block text-sm text-gray-600 mb-1">Cara Bayar</label>
+                <select wire:model.live="termin" class="input-field">
+                    <option value="0">Tunai</option>
+                    <option value="1">Termin Sekali (1x Jatuh Tempo)</option>
+                    <option value="2">Termin Bertahap (Multi Cicilan)</option>
+                </select>
+            </div>
+
+            @if(isset($termin) && $termin === '1')
+            <div class="mb-4">
+                <label class="block text-sm text-gray-600 mb-1">Termin (Sekali)</label>
+                <div class="flex gap-4">
+                    <input type="number" wire:model.live="termins.0.jumlah" class="input-field" readonly>
+                    <input type="date" wire:model.live="termins.0.tanggal_jatuh_tempo" class="input-field">
                 </div>
             </div>
+            @endif
+
+            @if(isset($termin) && $termin === '2')
+            <div class="mb-4">
+                <label class="block text-sm text-gray-600 mb-1">Termin Bertahap</label>
+                <div class="flex gap-4 items-center">
+                    <input type="number" wire:model="jumlah_termin" class="input-field" min="2" placeholder="Jumlah Termin">
+                    <input type="date" wire:model.live="tanggal_mulai_termin" class="input-field">
+                </div>
+                <div class="space-y-2 mt-4">
+                    @if(isset($termins) && is_array($termins))
+                        @foreach($termins as $i => $terminRow)
+                        <div class="flex gap-4 items-center">
+                            <input type="number" class="input-field" wire:model.live="termins.{{ $i }}.jumlah" readonly>
+                            <input type="date" class="input-field" wire:model.live="termins.{{ $i }}.tanggal_jatuh_tempo">
+                        </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+            @endif
 
             <!-- Summary -->
             <div class="border-t pt-4 space-y-2">
                 <div class="flex justify-between text-gray-600">
                     <span>Subtotal</span>
                     <span>Rp {{ number_format($this->subtotal, 0, ',', '.') }}</span>
-                </div>
-                <div class="flex justify-between text-gray-600">
-                    <span>Diskon</span>
-                    <span class="text-red-600">- Rp {{ number_format($this->diskon, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between text-xl font-bold text-gray-800 pt-2 border-t">
                     <span>Total</span>
@@ -124,27 +199,6 @@
             </div>
 
             <!-- Payment -->
-            <div class="mt-4 space-y-4">
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">Metode Pembayaran</label>
-                    <select wire:model="metode_pembayaran" class="input-field">
-                        <option value="tunai">Tunai</option>
-                        <option value="transfer">Transfer</option>
-                        <option value="qris">QRIS</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">Bayar</label>
-                    <div class="input-with-prefix">
-                        <span class="input-prefix">Rp</span>
-                        <input type="number" wire:model.live="bayar" class="input-field" placeholder="0">
-                    </div>
-                </div>
-                <div class="flex justify-between text-lg font-bold text-green-600">
-                    <span>Kembalian</span>
-                    <span>Rp {{ number_format($this->kembalian, 0, ',', '.') }}</span>
-                </div>
-            </div>
 
             <!-- Actions -->
             <div class="mt-4 flex gap-3">

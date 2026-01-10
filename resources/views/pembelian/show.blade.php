@@ -40,23 +40,23 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="table-header px-4 py-3">No</th>
-                        <th class="table-header px-4 py-3">Kode Barang</th>
-                        <th class="table-header px-4 py-3">Nama Barang</th>
-                        <th class="table-header px-4 py-3 text-right">Harga Beli</th>
-                        <th class="table-header px-4 py-3 text-center">Qty</th>
-                        <th class="table-header px-4 py-3 text-right">Subtotal</th>
+                        <th class="table-header">No</th>
+                        <th class="table-header">Kode Barang</th>
+                        <th class="table-header">Nama Barang</th>
+                        <th class="table-header text-right">Harga Beli</th>
+                        <th class="table-header text-center">Qty</th>
+                        <th class="table-header text-right">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($pembelian->detailPembelian as $index => $detail)
                         <tr class="border-b border-gray-100">
-                            <td class="table-cell px-4">{{ $index + 1 }}</td>
-                            <td class="table-cell px-4">{{ $detail->barangmaster->kode_barang }}</td>
-                            <td class="table-cell px-4">{{ $detail->barangmaster->nama_barang }}</td>
-                            <td class="table-cell px-4 text-right">Rp {{ number_format($detail->harga_beli, 0, ',', '.') }}</td>
-                            <td class="table-cell px-4 text-center">{{ $detail->jumlah }}</td>
-                            <td class="table-cell px-4 text-right">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                            <td class="table-cell">{{ $index + 1 }}</td>
+                            <td class="table-cell">{{ $detail->barangmaster->kode_barang }}</td>
+                            <td class="table-cell">{{ $detail->barangmaster->nama_barang }}</td>
+                            <td class="table-cell text-right">Rp {{ number_format($detail->harga_beli, 0, ',', '.') }}</td>
+                            <td class="table-cell text-center">{{ $detail->jumlah }}</td>
+                            <td class="table-cell text-right">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 </tbody>

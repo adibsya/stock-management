@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Barang;
+use App\Models\BarangMaster;
 use App\Models\DetailPembelian;
 use App\Models\DetailPenjualan;
 use App\Models\Pembelian;
@@ -23,6 +23,27 @@ class TransaksiService
      */
     public function simpanPenjualan(array $data): Penjualan
     {
+        // Validasi stok terlebih dahulu sebelum memproses transaksi
+        foreach ($data['items'] as $item) {
+            $bonus = $item['bonus'] ?? 0;
+            $totalDibutuhkan = $item['jumlah'] + $bonus;
+            
+            $stok = \App\Models\StokBarang::where('barang_master_id', $item['barang_id'])
+                ->where('gudang_id', $item['gudang_id'] ?? $data['gudang_id'])
+                ->first();
+            
+            $stokTersedia = $stok ? $stok->jumlah : 0;
+            
+            if ($stokTersedia < $totalDibutuhkan) {
+                $barang = BarangMaster::find($item['barang_id']);
+                throw new \Exception(
+                    "Stok tidak mencukupi untuk {$barang->nama_barang}! " .
+                    "Dibutuhkan: {$totalDibutuhkan} (termasuk bonus {$bonus}), " .
+                    "Tersedia: {$stokTersedia}"
+                );
+            }
+        }
+
         return DB::transaction(function () use ($data) {
             // Generate no faktur jika belum ada
             $noFaktur = $data['no_faktur'] ?? Penjualan::generateNoFaktur();
@@ -30,7 +51,9 @@ class TransaksiService
             // Hitung total kotor dari items
             $totalKotor = 0;
             foreach ($data['items'] as $item) {
-                $totalKotor += $item['jumlah'] * $item['harga_satuan'];
+                // Gunakan subtotal jika tersedia (untuk bundling/diskon), atau hitung manual
+                $subtotal = $item['subtotal'] ?? ($item['jumlah'] * $item['harga_satuan']);
+                $totalKotor += $subtotal;
             }
 
             // Hitung pajak dan total bayar
@@ -50,12 +73,16 @@ class TransaksiService
                 'pajak' => $pajak,
                 'total_bayar' => $totalBayar,
                 'metode_pembayaran' => $data['metode_pembayaran'] ?? 'tunai',
+                'mode_termin' => $data['mode_termin'] ?? 'cash',
+                'jatuh_tempo' => $data['jatuh_tempo'] ?? null,
                 'status' => $data['status'] ?? 'selesai',
             ]);
 
             // Simpan detail penjualan dan update stok
             foreach ($data['items'] as $item) {
-                $subtotal = $item['jumlah'] * $item['harga_satuan'];
+                // Gunakan subtotal jika tersedia (untuk bundling/diskon), atau hitung manual
+                $subtotal = $item['subtotal'] ?? ($item['jumlah'] * $item['harga_satuan']);
+                $bonus = $item['bonus'] ?? 0;
 
                 // Simpan detail penjualan (ikut gudang_id dari header atau item)
                 DetailPenjualan::create([
@@ -63,16 +90,26 @@ class TransaksiService
                     'barang_id' => $item['barang_id'],
                     'gudang_id' => $item['gudang_id'] ?? $penjualan->gudang_id,
                     'jumlah' => $item['jumlah'],
+                    'bonus' => $bonus,
                     'harga_satuan' => $item['harga_satuan'],
                     'subtotal' => $subtotal,
                 ]);
 
                 // Update stok barang (kurangi di gudang terkait)
-                $barang = Barang::where('id', $item['barang_id'])
+                $barang = BarangMaster::where('id', $item['barang_id'])->firstOrFail();
+                // Update stok barang di tabel stok_barang
+                $stok = \App\Models\StokBarang::where('barang_master_id', $item['barang_id'])
                     ->where('gudang_id', $item['gudang_id'] ?? $penjualan->gudang_id)
-                    ->firstOrFail();
-                $stokSebelum = $barang->stok;
-                $barang->kurangiStok($item['jumlah']);
+                    ->first();
+                $stokSebelum = $stok ? $stok->jumlah : 0;
+                
+                // Total barang keluar = jumlah beli + bonus
+                $totalKeluar = $item['jumlah'] + $bonus;
+                
+                if ($stok) {
+                    $stok->jumlah -= $totalKeluar;
+                    $stok->save();
+                }
 
                 // Catat ke riwayat stok (kartu stok)
                 RiwayatStok::create([
@@ -80,8 +117,8 @@ class TransaksiService
                     'barang_id' => $item['barang_id'],
                     'jenis_transaksi' => 'penjualan',
                     'jumlah_masuk' => 0,
-                    'jumlah_keluar' => $item['jumlah'],
-                    'sisa_stok' => $barang->fresh()->stok,
+                    'jumlah_keluar' => $totalKeluar,
+                    'sisa_stok' => $stok ? (int)$stok->jumlah : 0,
                     'referensi_id' => 'PNJ-' . $penjualan->id,
                 ]);
             }
@@ -139,9 +176,16 @@ class TransaksiService
                 ]);
                 
                 // Update stok barang (tambah)
-                $barang = Barang::findOrFail($item['barang_id']);
-                $stokSebelum = $barang->stok;
-                $barang->tambahStok($item['jumlah']);
+                $barang = BarangMaster::findOrFail($item['barang_id']);
+                // Update stok barang di tabel stok_barang
+                $stok = \App\Models\StokBarang::where('barang_master_id', $item['barang_id'])
+                    ->where('gudang_id', $item['gudang_id'] ?? $pembelian->gudang_id)
+                    ->first();
+                $stokSebelum = $stok ? $stok->jumlah : 0;
+                if ($stok) {
+                    $stok->jumlah += $item['jumlah'];
+                    $stok->save();
+                }
                 
                 // Update harga beli barang (optional: mengikuti harga beli terakhir)
                 if (isset($item['update_harga_beli']) && $item['update_harga_beli']) {
@@ -267,13 +311,33 @@ class TransaksiService
 
     /**
      * Proses retur penjualan
+     * Barang rusak tidak dikembalikan ke stok, customer ambil barang pengganti dari stok
      * 
      * @param array $data
      * @return \App\Models\Retur
      */
     public function prosesReturPenjualan(array $data)
     {
-        return DB::transaction(function () use ($data) {
+        // Cek stok terlebih dahulu sebelum membuat retur
+        $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
+            ->where('gudang_id', $data['gudang_id'])
+            ->first();
+        
+        if (!$stok) {
+            return [
+                'success' => false,
+                'message' => 'Stok barang tidak ditemukan di gudang ini!'
+            ];
+        }
+        
+        if ($stok->jumlah < $data['jumlah']) {
+            return [
+                'success' => false,
+                'message' => 'Stok barang pengganti tidak mencukupi! Tersedia: ' . $stok->jumlah
+            ];
+        }
+
+        return DB::transaction(function () use ($data, $stok) {
             $retur = \App\Models\Retur::create([
                 'tanggal' => $data['tanggal'] ?? now(),
                 'jenis_retur' => 'retur_penjualan',
@@ -281,29 +345,30 @@ class TransaksiService
                 'barang_id' => $data['barang_id'],
                 'jumlah' => $data['jumlah'],
                 'alasan' => $data['alasan'] ?? null,
-                'kondisi_barang' => $data['kondisi_barang'] ?? 'bagus',
-                'aksi_stok' => $data['aksi_stok'] ?? 'kembali_ke_stok',
-                'nilai_pengembalian' => $data['nilai_pengembalian'] ?? 0,
+                'kondisi_barang' => $data['kondisi_barang'] ?? 'rusak',
+                'aksi_stok' => 'buang', // Barang rusak dibuang, tidak kembali ke stok
+                'nilai_pengembalian' => 0, // Tidak ada pengembalian uang, ambil barang pengganti
             ]);
             
-            // Jika barang dikembalikan ke stok
-            if ($retur->shouldKembaliKeStok()) {
-                $barang = Barang::findOrFail($data['barang_id']);
-                $barang->tambahStok($data['jumlah']);
-                
-                // Catat ke riwayat stok
-                RiwayatStok::create([
-                    'tanggal' => $retur->tanggal,
-                    'barang_id' => $data['barang_id'],
-                    'jenis_transaksi' => 'retur_masuk',
-                    'jumlah_masuk' => $data['jumlah'],
-                    'jumlah_keluar' => 0,
-                    'sisa_stok' => $barang->fresh()->stok,
-                    'referensi_id' => 'RTR-' . $retur->id,
-                ]);
-            }
+            $stok->jumlah -= $data['jumlah']; // Kurangi stok untuk barang pengganti
+            $stok->save();
             
-            return $retur;
+            // Catat ke riwayat stok (pengambilan barang pengganti)
+            RiwayatStok::create([
+                'tanggal' => $retur->tanggal,
+                'barang_id' => $data['barang_id'],
+                'jenis_transaksi' => 'retur_keluar', // Keluar karena ambil barang pengganti
+                'jumlah_masuk' => 0,
+                'jumlah_keluar' => $data['jumlah'],
+                'sisa_stok' => $stok->jumlah,
+                'referensi_id' => 'RTR-' . $retur->id,
+            ]);
+            
+            return [
+                'success' => true,
+                'data' => $retur,
+                'message' => 'Retur berhasil diproses'
+            ];
         });
     }
 

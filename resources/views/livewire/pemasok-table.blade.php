@@ -28,28 +28,28 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('nama_supplier')">
+                        <th class="table-header cursor-pointer" wire:click="sortBy('nama_supplier')">
                             Nama Supplier
                             @if($sortBy === 'nama_supplier')
                                 <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                             @endif
                         </th>
-                        <th class="table-header px-4 py-3">Kontak</th>
-                        <th class="table-header px-4 py-3">Alamat</th>
-                        <th class="table-header px-4 py-3">Termin Pembayaran</th>
-                        <th class="table-header px-4 py-3 text-center">Aksi</th>
+                        <th class="table-header">Kontak</th>
+                        <th class="table-header">Alamat</th>
+                        <th class="table-header">Keterangan</th>
+                        <th class="table-header text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($pemasoks as $pemasok)
-                        <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="table-cell px-4 font-medium">{{ $pemasok->nama_supplier }}</td>
-                            <td class="table-cell px-4">{{ $pemasok->kontak ?? '-' }}</td>
-                            <td class="table-cell px-4">
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="table-cell font-medium">{{ $pemasok->nama_supplier }}</td>
+                            <td class="table-cell">{{ $pemasok->kontak ?? '-' }}</td>
+                            <td class="table-cell">
                                 <span class="truncate max-w-xs block">{{ $pemasok->alamat ?? '-' }}</span>
                             </td>
-                            <td class="table-cell px-4">{{ $pemasok->catatan_termin_pembayaran ?? '-' }}</td>
-                            <td class="table-cell px-4 text-center">
+                            <td class="table-cell">{{ $pemasok->catatan_termin_pembayaran ?? '-' }}</td>
+                            <td class="table-cell text-center">
                                 @if(auth()->user()->canModify())
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('pemasok.edit', $pemasok) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
@@ -57,7 +57,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </a>
-                                    <button wire:click="delete({{ $pemasok->id }})" wire:confirm="Yakin ingin menghapus pemasok ini?" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                    <button onclick="event.preventDefault(); confirmDelete(@this, {{ $pemasok->id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -85,3 +85,33 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function confirmDelete(livewire, id) {
+        Swal.fire({
+            title: 'Yakin ingin menghapus pemasok ini?',
+            text: 'Data yang dihapus tidak dapat dikembalikan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                livewire.call('delete', id);
+            }
+        });
+    }
+
+    window.addEventListener('pemasok-deleted', function(e) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Pemasok berhasil dihapus.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+</script>
+@endpush

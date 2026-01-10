@@ -44,13 +44,14 @@ class GudangTable extends Component
         $gudang = Gudang::find($id);
         if ($gudang) {
             $gudang->delete();
-            $this->dispatch('notify', message: 'Gudang berhasil dihapus!');
+            $this->dispatch('gudang-deleted');
         }
     }
 
     public function render()
     {
         $gudangs = Gudang::query()
+            ->with(['stokBarangs'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('nama_gudang', 'like', '%' . $this->search . '%')
@@ -60,8 +61,12 @@ class GudangTable extends Component
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate($this->perPage);
 
+        // Hitung total stok semua gudang
+        $totalStok = \App\Models\StokBarang::sum('jumlah');
+
         return view('livewire.gudang-table', [
             'gudangs' => $gudangs,
+            'totalStok' => $totalStok,
         ]);
     }
 }

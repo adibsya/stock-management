@@ -43,23 +43,23 @@
             <table class="w-full">
                 <thead>
                 <tr class="border-b border-gray-200">
-                    <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('name')">
+                    <th class="table-header cursor-pointer" wire:click="sortBy('name')">
                         Nama
                         @if($sortBy === 'name')
                             <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif
                     </th>
-                    <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('email')">
+                    <th class="table-header cursor-pointer" wire:click="sortBy('email')">
                         Email
                         @if($sortBy === 'email')
                             <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif
                     </th>
 
-                    <th class="table-header px-4 py-3">Gudang</th>
+                    <th class="table-header">Gudang</th>
 
-                    <th class="table-header px-4 py-3">Role</th>
-                    <th class="table-header px-4 py-3 text-center">Aksi</th>
+                    <th class="table-header">Role</th>
+                    <th class="table-header text-center">Aksi</th>
                 </tr>
                 </thead>
 

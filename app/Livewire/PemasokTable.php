@@ -44,7 +44,7 @@ class PemasokTable extends Component
         $pemasok = Pemasok::find($id);
         if ($pemasok) {
             $pemasok->delete();
-            $this->dispatch('notify', message: 'Pemasok berhasil dihapus!');
+            $this->dispatch('pemasok-deleted');
         }
     }
 

@@ -1,5 +1,5 @@
-<div>
-    <form wire:submit="save" class="card max-w-xl">
+<div class="flex justify-center items-center bg-gray-50">
+    <form wire:submit="save" class="card max-w-xl w-full shadow-lg p-8">
         <div class="space-y-6">
             <div>
                 <label for="kode_pelanggan" class="block text-sm font-medium text-gray-700 mb-1">Kode Pelanggan</label>
@@ -17,21 +17,6 @@
                 <label for="no_hp" class="block text-sm font-medium text-gray-700 mb-1">No. HP</label>
                 <input type="text" id="no_hp" wire:model="no_hp" class="input-field" placeholder="08xxxxxxxxxx">
                 @error('no_hp') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" wire:model="email" class="input-field" placeholder="email@example.com">
-                @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <label for="jenis_pelanggan" class="block text-sm font-medium text-gray-700 mb-1">Jenis Pelanggan</label>
-                <select id="jenis_pelanggan" wire:model="jenis_pelanggan" class="input-field">
-                    <option value="eceran">Eceran</option>
-                    <option value="grosir">Grosir</option>
-                </select>
-                @error('jenis_pelanggan') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>

@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string('no_hp')->nullable();
             $table->string('email')->nullable();
             $table->text('alamat')->nullable();
-            $table->enum('jenis_pelanggan', ['eceran', 'grosir'])->default('eceran');
+                // Email & jenis_pelanggan dihapus
+                // $table->string('email')->nullable();
+                // $table->enum('jenis_pelanggan', ['eceran', 'grosir'])->default('eceran');
             $table->timestamps();
         });
     }

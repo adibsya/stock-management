@@ -1,3 +1,5 @@
+@include('components.sweetalert2-cdn')
+
 <div>
     <!-- Header Actions -->
     <div class="card mb-6">
@@ -36,47 +38,47 @@
             <table class="w-full">
                 <thead>
                 <tr class="border-b border-gray-200">
-                    <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('kode_barang')">
+                    <th class="table-header cursor-pointer" wire:click="sortBy('kode_barang')">
                         Kode
                         @if($sortBy === 'kode_barang')
                             <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif
                     </th>
 
-                    <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('nama_barang')">
+                    <th class="table-header cursor-pointer" wire:click="sortBy('nama_barang')">
                         Nama Barang
                         @if($sortBy === 'nama_barang')
                             <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif
                     </th>
 
-                    <th class="table-header px-4 py-3">Kategori</th>
+                    <th class="table-header">Kategori</th>
 
-                    <th class="table-header px-4 py-3 text-right cursor-pointer" wire:click="sortBy('harga_beli')">
+                    <th class="table-header text-right cursor-pointer" wire:click="sortBy('harga_beli')">
                         Harga Beli
                     </th>
 
-                    <th class="table-header px-4 py-3 text-right cursor-pointer" wire:click="sortBy('harga_jual')">
+                    <th class="table-header text-right cursor-pointer" wire:click="sortBy('harga_jual')">
                         Harga Jual
                     </th>
 
-                    <th class="table-header px-4 py-3 text-center">Satuan</th>
+                    <th class="table-header text-center">Satuan</th>
 
-                    <th class="table-header px-4 py-3 text-center">Aksi</th>
+                    <th class="table-header text-center">Aksi</th>
                 </tr>
                 </thead>
                 <tbody>
                     @forelse($barangs as $barang)
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="table-cell px-4 font-mono text-sm">
+                        <td class="table-cell font-mono text-sm">
                             {{ $barang->kode_barang }}
                         </td>
 
-                        <td class="table-cell px-4">
+                        <td class="table-cell">
                             <p class="font-medium">{{ $barang->nama_barang }}</p>
                         </td>
 
-                        <td class="table-cell px-4">
+                        <td class="table-cell">
                             @if($barang->kategori)
                                 <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
                                     {{ $barang->kategori }}
@@ -86,19 +88,19 @@
                             @endif
                         </td>
 
-                        <td class="table-cell px-4 text-right">
+                        <td class="table-cell text-right">
                             Rp {{ number_format($barang->harga_beli, 0, ',', '.') }}
                         </td>
 
-                        <td class="table-cell px-4 text-right font-semibold">
+                        <td class="table-cell text-right font-semibold">
                             Rp {{ number_format($barang->harga_jual, 0, ',', '.') }}
                         </td>
 
-                        <td class="table-cell px-4 text-center">
+                        <td class="table-cell text-center">
                             {{ strtoupper($barang->satuan) }}
                         </td>
 
-                        <td class="table-cell px-4">
+                        <td class="table-cell">
                             @if(auth()->user()->canModify())
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('barang.edit', $barang) }}"
@@ -108,8 +110,7 @@
                                         ✏️
                                     </a>
 
-                                    <button wire:click="delete({{ $barang->id }})"
-                                            wire:confirm="Yakin ingin menghapus barang ini?"
+                                    <button onclick="event.preventDefault(); confirmDelete(@this, {{ $barang->id }})"
                                             class="w-9 h-9 flex items-center justify-center
                                                 text-red-600 hover:bg-red-50
                                                 rounded-lg transition">
@@ -139,3 +140,23 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function confirmDelete(livewire, id) {
+        Swal.fire({
+            title: 'Yakin ingin menghapus barang ini?',
+            text: 'Data yang dihapus tidak dapat dikembalikan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                livewire.call('delete', id);
+            }
+        });
+    }
+</script>
+@endpush

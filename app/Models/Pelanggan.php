@@ -13,9 +13,7 @@ class Pelanggan extends Model
         'kode_pelanggan',
         'nama_pelanggan',
         'no_hp',
-        'email',
         'alamat',
-        'jenis_pelanggan',
     ];
 
     /**
@@ -31,7 +29,7 @@ class Pelanggan extends Model
      */
     public function isGrosir(): bool
     {
-        return $this->jenis_pelanggan === 'grosir';
+        // Jenis pelanggan dihapus
     }
 
     /**
@@ -39,6 +37,6 @@ class Pelanggan extends Model
      */
     public function isEceran(): bool
     {
-        return $this->jenis_pelanggan === 'eceran';
+        // Jenis pelanggan dihapus
     }
 }

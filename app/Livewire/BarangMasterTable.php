@@ -8,9 +8,12 @@ use Livewire\WithPagination;
 
 class BarangMasterTable extends Component
 {
+
     use WithPagination;
+    protected $listeners = ['delete'];
 
     public string $search = '';
+    public string $kategori = '';
     public string $sortBy = 'nama_barang';
     public string $sortDirection = 'asc';
     public int $perPage = 10;
@@ -37,6 +40,9 @@ class BarangMasterTable extends Component
                 $query->where('nama_barang', 'like', '%' . $this->search . '%')
                       ->orWhere('kode_barang', 'like', '%' . $this->search . '%');
             })
+            ->when($this->kategori, function ($query) {
+                $query->where('kategori', $this->kategori);
+            })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate($this->perPage);
 
@@ -47,5 +53,12 @@ class BarangMasterTable extends Component
             'barangs' => $barangs,
             'kategoris' => $kategoris,
         ]);
+    }
+
+    public function delete($id)
+    {
+        $barang = BarangMaster::findOrFail($id);
+        $barang->delete();
+        session()->flash('message', 'Barang berhasil dihapus.');
     }
 }

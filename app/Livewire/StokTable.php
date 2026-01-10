@@ -13,6 +13,7 @@ class StokTable extends Component
 
     public $perPage = 15;
     public $search = '';
+    public $gudangId = '';
 
     public function render()
     {
@@ -26,9 +27,13 @@ class StokTable extends Component
             });
         }
 
-        // Superadmin: tampilkan semua stok, Admin: hanya stok di gudang miliknya
-        if (method_exists($user, 'isSuperAdmin') && !$user->isSuperAdmin()) {
-            if (property_exists($user, 'gudang_id') && $user->gudang_id) {
+        if ($this->gudangId) {
+            $query->where('gudang_id', $this->gudangId);
+        }
+
+        // Superadmin/Viewer: tampilkan semua stok, Admin: hanya stok di gudang miliknya
+        if ($user->isAdmin()) {
+            if ($user->gudang_id) {
                 $query->where('gudang_id', $user->gudang_id);
             } else {
                 $query->whereRaw('1=0'); // Tidak tampilkan apapun jika admin tidak punya gudang
@@ -36,9 +41,16 @@ class StokTable extends Component
         }
 
         $stoks = $query->orderByDesc('id')->paginate($this->perPage);
+        $gudangs = \App\Models\Gudang::all();
+
+        // Hitung total stok sesuai role dan filter
+        $totalStok = $query->sum('jumlah');
 
         return view('livewire.stok-table', [
             'stoks' => $stoks,
+            'gudangs' => $gudangs,
+            'gudangId' => $this->gudangId,
+            'totalStok' => $totalStok,
         ]);
     }
 }

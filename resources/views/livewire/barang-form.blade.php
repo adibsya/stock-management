@@ -1,4 +1,4 @@
-<div>
+<div class="flex justify-center items-center py-8">
     <form wire:submit.prevent="save" class="card max-w-2xl">
         <div class="space-y-6">
 
