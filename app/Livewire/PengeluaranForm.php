@@ -3,76 +3,72 @@
 namespace App\Livewire;
 
 use App\Models\Pengeluaran;
+use App\Models\Gudang;
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 
 class PengeluaranForm extends Component
 {
-    public ?Pengeluaran $pengeluaran = null;
-    
     public string $tanggal = '';
     public string $jenis_pengeluaran = '';
-    public string $keterangan = '';
-    public string $jumlah_biaya = '';
+    public float|int $jumlah_biaya = 0;
+    public ?string $keterangan = null;
+    public int $gudang_id;
 
-    public bool $isEdit = false;
+    public bool $isSuperadmin = false;
+    public $gudangs;
+
+    public function mount(): void
+    {
+        $user = Auth::user();
+
+        $this->tanggal = now()->format('Y-m-d');
+        $this->isSuperadmin = $user->isSuperAdmin();
+
+        $this->gudangs = Gudang::all();
+
+        // 🔒 Paksa gudang untuk non-superadmin
+        if (!$this->isSuperadmin) {
+            $this->gudang_id = $user->gudang_id;
+        }
+    }
 
     protected function rules(): array
     {
         return [
-            'tanggal' => 'required|date',
-            'jenis_pengeluaran' => 'required|string|max:100',
-            'keterangan' => 'nullable|string',
-            'jumlah_biaya' => 'required|numeric|min:0',
+            'tanggal' => ['required', 'date'],
+            'jenis_pengeluaran' => ['required', 'string', 'max:100'],
+            'jumlah_biaya' => ['required', 'numeric', 'min:1'],
+            'gudang_id' => ['required', 'exists:gudang,id'],
+            'keterangan' => ['nullable', 'string'],
         ];
-    }
-
-    public function mount(?Pengeluaran $pengeluaran = null): void
-    {
-        if ($pengeluaran && $pengeluaran->exists) {
-            $this->isEdit = true;
-            $this->pengeluaran = $pengeluaran;
-            $this->tanggal = $pengeluaran->tanggal->format('Y-m-d');
-            $this->jenis_pengeluaran = $pengeluaran->jenis_pengeluaran;
-            $this->keterangan = $pengeluaran->keterangan ?? '';
-            $this->jumlah_biaya = $pengeluaran->jumlah_biaya;
-        } else {
-            $this->tanggal = now()->format('Y-m-d');
-        }
     }
 
     public function save(): void
     {
-        if (!auth()->user()->canModify()) {
-            session()->flash('error', 'Anda tidak memiliki akses untuk menyimpan data!');
-            return;
-        }
+        $this->validate();
 
-        $validated = $this->validate();
-
-        $data = [
+        Pengeluaran::create([
             'tanggal' => $this->tanggal,
             'jenis_pengeluaran' => $this->jenis_pengeluaran,
-            'keterangan' => $this->keterangan ?: null,
             'jumlah_biaya' => $this->jumlah_biaya,
-        ];
+            'keterangan' => $this->keterangan,
+            'gudang_id' => $this->gudang_id,
+            'user_id' => Auth::id(),
+        ]);
 
-        if ($this->isEdit) {
-            $this->pengeluaran->update($data);
-            session()->flash('success', 'Pengeluaran berhasil diperbarui!');
-        } else {
-            Pengeluaran::create($data);
-            session()->flash('success', 'Pengeluaran berhasil ditambahkan!');
-        }
 
-        $this->redirect(route('pengeluaran.index'));
+        $this->dispatch('show-alert', [
+            'type' => 'success',
+            'message' => 'Pengeluaran berhasil ditambahkan',
+        ]);
+
+        $this->reset(['jenis_pengeluaran', 'jumlah_biaya', 'keterangan']);
+        $this->tanggal = now()->format('Y-m-d');
     }
 
     public function render()
     {
-        $kategoris = ['Operasional', 'Gaji', 'Listrik', 'Air', 'Internet', 'Sewa', 'Transportasi', 'Lainnya'];
-        
-        return view('livewire.pengeluaran-form', [
-            'kategoris' => $kategoris,
-        ]);
+        return view('livewire.pengeluaran-form');
     }
 }

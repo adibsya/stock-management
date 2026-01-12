@@ -3,7 +3,8 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Gudang;
-use App\Models\Barang;
+use App\Models\BarangMaster;
+use App\Models\StokBarang;
 use App\Models\Pelanggan;
 use App\Models\Penjualan;
 use App\Services\TransaksiService;
@@ -11,106 +12,190 @@ use Livewire\Component;
 
 class PointOfSale extends Component
 {
+    public string $bayar = '0';
     public array $cart = [];
     public string $searchBarang = '';
     public ?int $pelanggan_id = null;
-    public string $metode_pembayaran = 'tunai';
-    public string $diskon_transaksi = '0';
-    public string $bayar = '0';
+    public string $termin = '0'; // '0' = tunai, '1' = termin sekali, '2' = termin bertahap
+    public array $termins = [];
+    public int $jumlah_termin = 2;
+    public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
-    public int $jumlah_cicilan = 1;
-    public array $termin_cicilan = [];
+    public function updatedTermin($value)
+    {
+        $this->setDefaultTermins();
+    }
+
+    public function updatedJumlahTermin($value)
+    {
+        if ($this->termin === '2') {
+            $this->generateTerminBertahap();
+        }
+    }
+
+    public function updatedTanggalMulaiTermin($value)
+    {
+        if ($this->termin === '2') {
+            $this->generateTerminBertahap();
+        }
+    }
+
+    private function setDefaultTermins()
+    {
+        $total = $this->total;
+        if ($this->termin === '1') {
+            $this->termins = [
+                [
+                    'jumlah' => $total,
+                    'tanggal_jatuh_tempo' => $this->tanggal_mulai_termin ?: date('Y-m-d'),
+                ]
+            ];
+        } elseif ($this->termin === '2') {
+            $this->generateTerminBertahap();
+        } else {
+            $this->termins = [];
+        }
+    }
+
+    private function generateTerminBertahap()
+    {
+        $total = $this->total;
+        $jumlah_termin = max(2, (int) $this->jumlah_termin);
+        $tanggal_mulai = $this->tanggal_mulai_termin ?: date('Y-m-d');
+        $cicilan = floor($total / $jumlah_termin);
+        $sisa = $total - ($cicilan * $jumlah_termin);
+        $termins = [];
+        for ($i = 0; $i < $jumlah_termin; $i++) {
+            $jumlah = $cicilan + ($i == 0 ? $sisa : 0);
+            $tanggal = date('Y-m-d', strtotime("$tanggal_mulai +$i month"));
+            $termins[] = [
+                'jumlah' => $jumlah,
+                'tanggal_jatuh_tempo' => $tanggal,
+            ];
+        }
+        $this->termins = $termins;
+    }
 
     protected $listeners = ['refreshCart' => '$refresh'];
 
-    /**
-     * Hook saat diskon diubah - validasi cart terlebih dahulu
-     */
-    public function updatedDiskonTransaksi(): void
-    {
-        $this->validateCart();
-    }
+    // Untuk polling otomatis Livewire (real-time)
+    public $refreshInterval = 5; // detik
 
-    /**
-     * Hook saat bayar diubah - validasi cart terlebih dahulu
-     */
-    public function updatedBayar(): void
+    public function addToCart(int $barangMasterId): void
     {
-        $this->validateCart();
-    }
+        if (!$this->gudang_id) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Pilih gudang terlebih dahulu!'
+            ]);
+            return;
+        }
+        $stok = StokBarang::where('barang_master_id', $barangMasterId)
+            ->where('gudang_id', $this->gudang_id)
+            ->first();
+        if (!$stok || $stok->jumlah <= 0) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Stok barang habis di gudang ini!'
+            ]);
+            return;
+        }
+        $barang = BarangMaster::find($barangMasterId);
+        if (!$barang) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Barang tidak ditemukan!'
+            ]);
+            return;
+        }
+        // Logic khusus untuk nukleer/rokok
+        $isNukleer = false;
+        $nama = strtolower($barang->nama_barang);
+        $kode = strtolower($barang->kode_barang);
+        if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
+            $isNukleer = true;
+        }
 
-    /**
-     * Hook saat gudang diubah - kosongkan cart karena barang berbeda per gudang
-     * Hanya clear cart jika memang ada barang dan user yang ubah
-     */
-    public function updatedGudangId($value): void
-    {
-        // Hanya kosongkan cart jika ada item dan gudang benar-benar berubah
-        if (!empty($this->cart)) {
-            // Cek apakah ada barang yang tidak sesuai dengan gudang baru
-            $hasInvalidItems = false;
-            foreach ($this->cart as $item) {
-                $barang = Barang::where('id', $item['barang_id'])
-                    ->where('gudang_id', $value)
-                    ->first();
-                if (!$barang) {
-                    $hasInvalidItems = true;
-                    break;
-                }
+        $harga_jual = $barang->harga_jual;
+        $bonus = 0;
+        if ($isNukleer) {
+            $qty = 1;
+            $key = array_search($barangMasterId, array_column($this->cart, 'barang_id'));
+            if ($key !== false) {
+                $qty = $this->cart[$key]['jumlah'] + 1;
             }
             
-            if ($hasInvalidItems) {
-                $this->cart = [];
-                $this->bayar = '0';
-                $this->diskon_transaksi = '0';
-                $this->dispatch('notify', message: 'Keranjang dikosongkan karena gudang berubah.');
+            // Hitung bonus berdasarkan qty
+            if ($qty >= 600) {
+                $bonus = floor($qty / 600) * 30; // 600 pcs bonus 30
+            } elseif ($qty >= 100) {
+                $bonus = floor($qty / 100) * 5; // 100 pcs bonus 5
+            } elseif ($qty >= 20) {
+                $bonus = floor($qty / 20) * 1; // 20 pcs bonus 1
             }
+            
+            // Bundling logic
+            $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
+            $sisa = $qty;
+            $subtotal = 0;
+            foreach ($bundles as $bundleQty => $bundlePrice) {
+                $bundleCount = intdiv($sisa, $bundleQty);
+                $subtotal += $bundleCount * $bundlePrice;
+                $sisa -= $bundleCount * $bundleQty;
+            }
+            $subtotal += $sisa * $harga_jual;
+            $harga_jual = $harga_jual; // harga satuan untuk sisa
         }
-    }
-
-    public function updatedJumlahCicilan()
-    {
-        // Initialize termin_cicilan array based on jumlah_cicilan
-        $this->termin_cicilan = [];
-        $jumlahPerCicilan = $this->total > 0 ? round($this->total / $this->jumlah_cicilan, 2) : 0;
-        
-        for ($i = 1; $i <= $this->jumlah_cicilan; $i++) {
-            $this->termin_cicilan[$i] = [
-                'jumlah' => $jumlahPerCicilan,
-                'tanggal_jatuh_tempo' => null,
-            ];
-        }
-    }
-
-    public function addToCart(int $barangId): void
-    {
-        // Load barang dengan master untuk mendapatkan info lengkap
-        $barang = Barang::with('master')->find($barangId);
-        if (!$barang) {
-            $this->dispatch('notify', message: 'Barang tidak ditemukan!');
-            return;
-        }
-        
-        // Cek stok real-time
-        if ($barang->stok <= 0) {
-            $this->dispatch('notify', message: 'Stok barang habis!');
-            return;
-        }
-
-        // Ambil harga dari BarangMaster
-        $harga_jual = $barang->master->harga_jual ?? $barang->harga_jual;
-
-        // Cek apakah barang sudah ada di cart
-        $key = array_search($barangId, array_column($this->cart, 'barang_id'));
+        $key = array_search($barangMasterId, array_column($this->cart, 'barang_id'));
         if ($key !== false) {
-            // Cek stok sebelum menambah
-            if ($this->cart[$key]['jumlah'] >= $barang->stok) {
-                $this->dispatch('notify', message: 'Stok tidak mencukupi! Stok tersedia: ' . $barang->stok);
+            if ($this->cart[$key]['jumlah'] >= $stok->jumlah) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'Stok tidak mencukupi!'
+                ]);
                 return;
             }
             $this->cart[$key]['jumlah']++;
-            $this->cart[$key]['subtotal'] = $this->cart[$key]['jumlah'] * $this->cart[$key]['harga_satuan'];
+            if ($isNukleer) {
+                $qty = $this->cart[$key]['jumlah'];
+                
+                // Hitung bonus berdasarkan qty
+                if ($qty >= 600) {
+                    $bonus = floor($qty / 600) * 30;
+                } elseif ($qty >= 100) {
+                    $bonus = floor($qty / 100) * 5;
+                } elseif ($qty >= 20) {
+                    $bonus = floor($qty / 20) * 1;
+                }
+                
+                $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
+                $sisa = $qty;
+                $subtotal = 0;
+                foreach ($bundles as $bundleQty => $bundlePrice) {
+                    $bundleCount = intdiv($sisa, $bundleQty);
+                    $subtotal += $bundleCount * $bundlePrice;
+                    $sisa -= $bundleCount * $bundleQty;
+                }
+                $subtotal += $sisa * $barang->harga_jual;
+                $this->cart[$key]['subtotal'] = $subtotal;
+                $this->cart[$key]['harga_satuan'] = $barang->harga_jual;
+                $this->cart[$key]['bonus'] = $bonus;
+            } else {
+                $this->cart[$key]['subtotal'] = $this->cart[$key]['jumlah'] * $this->cart[$key]['harga_satuan'];
+            }
         } else {
+            $subtotal = $harga_jual;
+            if ($isNukleer) {
+                $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
+                $sisa = 1;
+                $subtotal = 0;
+                foreach ($bundles as $bundleQty => $bundlePrice) {
+                    $bundleCount = intdiv($sisa, $bundleQty);
+                    $subtotal += $bundleCount * $bundlePrice;
+                    $sisa -= $bundleCount * $bundleQty;
+                }
+                $subtotal += $sisa * $harga_jual;
+            }
             $this->cart[] = [
                 'barang_id' => $barang->id,
                 'kode_barang' => $barang->kode_barang,
@@ -118,11 +203,12 @@ class PointOfSale extends Component
                 'satuan' => $barang->satuan,
                 'harga_satuan' => $harga_jual,
                 'jumlah' => 1,
-                'subtotal' => $harga_jual,
-                'stok' => $barang->stok,
+                'subtotal' => $subtotal,
+                'stok' => $stok->jumlah,
+                'satuan' => $barang->satuan,
+                'bonus' => $isNukleer ? $bonus : 0,
             ];
         }
-
         $this->searchBarang = '';
         $this->dispatch('notify', message: 'Berhasil ditambahkan ke keranjang!');
     }
@@ -131,22 +217,58 @@ class PointOfSale extends Component
     {
         $qty = (int) $qty;
         if (!isset($this->cart[$index])) return;
-
         if ($qty <= 0) {
             $this->removeFromCart($index);
             return;
         }
-
-        // Cek stok real-time dari database
-        $barang = Barang::find($this->cart[$index]['barang_id']);
-        if (!$barang || $qty > $barang->stok) {
-            $this->dispatch('notify', message: 'Stok tidak mencukupi! Stok tersedia: ' . ($barang ? $barang->stok : 0));
+        // Cek stok terbaru dari database
+        $stok = StokBarang::where('barang_master_id', $this->cart[$index]['barang_id'])
+            ->where('gudang_id', $this->gudang_id)
+            ->first();
+        $stokJumlah = $stok ? $stok->jumlah : 0;
+        if ($qty > $stokJumlah) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Stok tidak mencukupi!'
+            ]);
             return;
         }
-
         $this->cart[$index]['jumlah'] = $qty;
-        $this->cart[$index]['stok'] = $barang->stok; // Update stok di cart
-        $this->cart[$index]['subtotal'] = $qty * $this->cart[$index]['harga_satuan'];
+        // Logic harga & bonus khusus nukleer
+        $barang = BarangMaster::find($this->cart[$index]['barang_id']);
+        $isNukleer = false;
+        $nama = strtolower($barang->nama_barang);
+        $kode = strtolower($barang->kode_barang);
+        if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
+            $isNukleer = true;
+        }
+        if ($isNukleer) {
+            $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
+            $sisa = $qty;
+            $subtotal = 0;
+            foreach ($bundles as $bundleQty => $bundlePrice) {
+                $bundleCount = intdiv($sisa, $bundleQty);
+                $subtotal += $bundleCount * $bundlePrice;
+                $sisa -= $bundleCount * $bundleQty;
+            }
+            $subtotal += $sisa * $barang->harga_jual;
+            $this->cart[$index]['subtotal'] = $subtotal;
+            $this->cart[$index]['harga_satuan'] = $barang->harga_jual;
+            
+            // Hitung bonus berdasarkan qty
+            $bonus = 0;
+            if ($qty >= 600) {
+                $bonus = floor($qty / 600) * 30;
+            } elseif ($qty >= 100) {
+                $bonus = floor($qty / 100) * 5;
+            } elseif ($qty >= 20) {
+                $bonus = floor($qty / 20) * 1;
+            }
+            $this->cart[$index]['bonus'] = $bonus;
+        } else {
+            $this->cart[$index]['subtotal'] = $qty * $this->cart[$index]['harga_satuan'];
+        }
+        $this->cart[$index]['stok'] = $stokJumlah;
     }
 
     public function removeFromCart(int $index): void
@@ -159,7 +281,6 @@ class PointOfSale extends Component
     {
         $this->cart = [];
         $this->pelanggan_id = null;
-        $this->diskon_transaksi = '0';
         $this->bayar = '0';
     }
 
@@ -170,7 +291,7 @@ class PointOfSale extends Component
 
     public function getDiskonProperty(): float
     {
-        return (float) $this->diskon_transaksi;
+        return 0;
     }
 
     public function getTotalProperty(): float
@@ -233,30 +354,53 @@ class PointOfSale extends Component
 
     public function prosesTransaksi(): void
     {
+        // Validasi semua field wajib
         if (empty($this->cart)) {
-            $this->dispatch('notify', message: 'Keranjang kosong!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Keranjang kosong!'
+            ]);
             return;
         }
-
         if (!$this->gudang_id) {
-            $this->dispatch('notify', message: 'Pilih gudang terlebih dahulu!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Pilih gudang terlebih dahulu!'
+            ]);
             return;
         }
-
-        // Validasi untuk termin
-        if ($this->metode_pembayaran === 'termin') {
-            foreach ($this->termin_cicilan as $key => $cicilan) {
-                if (empty($cicilan['tanggal_jatuh_tempo'])) {
-                    $this->dispatch('notify', message: 'Lengkapi tanggal jatuh tempo untuk semua cicilan!', type: 'error');
+        if (!$this->pelanggan_id) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Pilih pelanggan terlebih dahulu!'
+            ]);
+            return;
+        }
+        if ($this->termin === '1') {
+            if (empty($this->termins) || empty($this->termins[0]['jumlah']) || empty($this->termins[0]['tanggal_jatuh_tempo'])) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'Isi data termin (jumlah & tanggal jatuh tempo)!'
+                ]);
+                return;
+            }
+        }
+        if ($this->termin === '2') {
+            if (empty($this->jumlah_termin) || empty($this->tanggal_mulai_termin)) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'Isi jumlah termin dan tanggal mulai termin!'
+                ]);
+                return;
+            }
+            foreach ($this->termins as $i => $termin) {
+                if (empty($termin['jumlah']) || empty($termin['tanggal_jatuh_tempo'])) {
+                    $this->dispatch('show-alert', [
+                        'type' => 'error',
+                        'message' => 'Isi semua jumlah & tanggal jatuh tempo termin!'
+                    ]);
                     return;
                 }
-            }
-        } else {
-            // Validasi untuk non-termin
-            $bayar = (float) $this->bayar;
-            if ($bayar < $this->total) {
-                $this->dispatch('notify', message: 'Pembayaran kurang!');
-                return;
             }
         }
 
@@ -269,57 +413,62 @@ class PointOfSale extends Component
                     'barang_id' => $item['barang_id'],
                     'jumlah' => $item['jumlah'],
                     'harga_satuan' => $item['harga_satuan'],
-                    'gudang_id' => $this->gudang_id,
+                    'subtotal' => $item['subtotal'], // Kirim subtotal yang sudah dihitung dengan bundling
+                    'bonus' => $item['bonus'] ?? 0, // Kirim bonus jika ada
                 ];
             }, $this->cart);
+
+            $mode_termin = $this->termin === '0' ? 'cash' : 'termin';
+            $status = 'selesai';
+            if ($mode_termin === 'termin') {
+                $status = 'belum_lunas';
+            }
+            $jatuh_tempo = null;
+            if ($this->termin === '1' && isset($this->termins[0]['tanggal_jatuh_tempo'])) {
+                $jatuh_tempo = $this->termins[0]['tanggal_jatuh_tempo'];
+            }
 
             $penjualan = $transaksiService->simpanPenjualan([
                 'user_id' => $user->id,
                 'pelanggan_id' => $this->pelanggan_id,
                 'gudang_id' => $this->gudang_id,
                 'items' => $items,
-                'diskon_transaksi' => $this->diskon,
-                'metode_pembayaran' => $this->metode_pembayaran,
+                'mode_termin' => $mode_termin,
+                'jatuh_tempo' => $jatuh_tempo,
+                'status' => $status,
             ]);
 
-            // Jika metode pembayaran termin, simpan detail cicilan
-            if ($this->metode_pembayaran === 'termin') {
-                foreach ($this->termin_cicilan as $key => $cicilan) {
+            // Simpan termin bertahap jika ada
+            if ($this->termin === '2' && is_array($this->termins)) {
+                foreach ($this->termins as $termin) {
                     \App\Models\PembayaranPenjualan::create([
                         'penjualan_id' => $penjualan->id,
-                        'tanggal_bayar' => $cicilan['tanggal_jatuh_tempo'],
-                        'jumlah_bayar' => $cicilan['jumlah'],
-                        'metode_pembayaran' => 'termin',
-                        'status_bayar' => 'pending',
-                        'catatan' => 'Cicilan ke-' . $key . ' dari ' . $this->jumlah_cicilan . ' cicilan',
+                        'jumlah' => $termin['jumlah'],
+                        'tanggal_jatuh_tempo' => $termin['tanggal_jatuh_tempo'],
+                        'status' => 'belum_lunas',
                     ]);
                 }
+            } elseif ($this->termin === '1' && isset($this->termins[0]['jumlah'])) {
+                // Simpan satu termin jika termin sekali
+                \App\Models\PembayaranPenjualan::create([
+                    'penjualan_id' => $penjualan->id,
+                    'jumlah' => $this->termins[0]['jumlah'],
+                    'tanggal_jatuh_tempo' => $this->termins[0]['tanggal_jatuh_tempo'],
+                    'status' => 'belum_lunas',
+                ]);
             }
 
             $this->clearCart();
-            $this->metode_pembayaran = 'tunai';
-            $this->jumlah_cicilan = 1;
-            $this->termin_cicilan = [];
-            $this->bayar = '0';
-            
-            // Log untuk debugging
-            \Log::info('Transaksi berhasil disimpan', [
-                'penjualan_id' => $penjualan->id,
-                'no_faktur' => $penjualan->no_faktur,
-                'status' => $penjualan->status,
-                'metode_pembayaran' => $penjualan->metode_pembayaran,
-                'total_bayar' => $penjualan->total_bayar,
+            $this->dispatch('show-alert', [
+                'type' => 'success',
+                'message' => 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur
             ]);
-            
-            // Redirect ke halaman penjualan dengan pesan sukses
-            session()->flash('success', 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
-            $this->dispatch('notify', message: 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur);
 
         } catch (\Exception $e) {
-            \Log::error('Error saat menyimpan transaksi: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => $e->getMessage()
             ]);
-            $this->dispatch('notify', message: 'Error: ' . $e->getMessage());
         }
     }
 
@@ -332,20 +481,17 @@ class PointOfSale extends Component
         } elseif ($user->isAdmin()) {
             if ($user->gudang) {
                 $gudangs = collect([$user->gudang]);
-                // Hanya set gudang_id jika belum ada, untuk mencegah trigger updatedGudangId
-                if ($this->gudang_id === null) {
+                if (!$this->gudang_id) {
                     $this->gudang_id = $user->gudang->id;
                 }
             }
         }
 
-        // Query barang dengan stok > 0
-        $barangsQuery = Barang::query()
-            ->with(['master', 'gudang'])
-            ->where('stok', '>', 0)
-            ->when($this->gudang_id, function ($query) {
-                $query->where('gudang_id', $this->gudang_id);
-            })
+        // Ambil semua barang master, stok per gudang (jika tidak ada stok, tampilkan 0)
+        $barangs = BarangMaster::query()
+            ->with(['stok' => function($q) {
+                $q->where('gudang_id', $this->gudang_id);
+            }])
             ->when($this->searchBarang, function ($query) {
                 $query->whereHas('master', function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->searchBarang . '%')

@@ -12,4 +12,9 @@ class Gudang extends Model
         'nama_gudang',
         'lokasi',
     ];
+
+    public function stokBarangs()
+    {
+        return $this->hasMany(\App\Models\StokBarang::class, 'gudang_id');
+    }
 }

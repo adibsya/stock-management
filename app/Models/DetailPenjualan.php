@@ -14,6 +14,7 @@ class DetailPenjualan extends Model
         'barang_id',
         'gudang_id',
         'jumlah',
+        'bonus',
         'harga_satuan',
         'subtotal',
     ];
@@ -27,6 +28,7 @@ class DetailPenjualan extends Model
 
     protected $casts = [
         'jumlah' => 'integer',
+        'bonus' => 'integer',
         'harga_satuan' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];
@@ -40,11 +42,11 @@ class DetailPenjualan extends Model
     }
 
     /**
-     * Get barang for this detail
+     * Get barang master for this detail
      */
     public function barang(): BelongsTo
     {
-        return $this->belongsTo(Barang::class, 'barang_id');
+        return $this->belongsTo(BarangMaster::class, 'barang_id');
     }
 
     /**

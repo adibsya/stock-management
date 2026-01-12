@@ -1,1 +1,3 @@
-@include('livewire.barang-table')
+<div>
+    @include('livewire.barang-table')
+</div>

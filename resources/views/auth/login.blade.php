@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - Ngarumi Stock Management</title>
+    <title>Login - Penak Stock Management</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full bg-slate-50">
     <div class="flex min-h-full relative">
         <!-- Left Side - Branding -->
-        <div class="hidden lg:flex lg:w-1/2 relative bg-[#1e3a5f] overflow-hidden" style="clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);">
+        <div class="hidden lg:flex lg:w-1/2 relative bg-[#064c30] overflow-hidden" style="clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);">
             <!-- Background Pattern -->
             <div class="absolute inset-0 opacity-10">
                 <svg class="absolute h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -24,24 +24,16 @@
             </div>
 
             <!-- Gradient Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] via-[#2d4a7c] to-[#1e3a5f]"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#064c30] via-[#2e6b04] to-[#064c30]"></div>
 
             <!-- Content -->
             <div class="relative z-10 flex flex-col justify-center items-center w-full px-12 py-12">
                 <!-- Logo -->
-                <div class="mb-6">
-                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-                        <svg class="w-12 h-12 text-white" viewBox="0 0 100 100" fill="currentColor">
-                            <path d="M50 15 C40 30, 35 50, 38 65 C41 78, 48 85, 50 85 C52 85, 59 78, 62 65 C65 50, 60 30, 50 15 Z" opacity="0.9"/>
-                            <path d="M35 25 C20 40, 15 60, 22 75 C27 85, 38 88, 45 82 C38 78, 32 65, 32 50 C32 40, 35 30, 35 25 Z" opacity="0.5"/>
-                            <path d="M65 25 C80 40, 85 60, 78 75 C73 85, 62 88, 55 82 C62 78, 68 65, 68 50 C68 40, 65 30, 65 25 Z" opacity="0.5"/>
-                        </svg>
-                    </div>
+                <div class="mb-8 flex flex-col items-center">
+                    <img src="{{ asset('depan.png') }}" alt="Logo" class="w-85 h-25 mb-2">
+                    <h1 class="text-3xl font-extrabold text-white tracking-wide mb-1 text-center drop-shadow">PT Persada Nawa Kartika</h1>
+                    <p class="text-green-200/80 text-sm tracking-widest uppercase mb-10 text-center">POS & Stock Management System</p>
                 </div>
-
-                <!-- Brand Text -->
-                <h1 class="text-4xl font-bold text-white tracking-wide mb-2">NGARUMI</h1>
-                <p class="text-blue-200/80 text-sm tracking-widest uppercase mb-16">Stock Management System</p>
 
                 <!-- Features List -->
                 <div class="space-y-6 max-w-xs">
@@ -80,26 +72,22 @@
         <div class="flex flex-1 flex-col justify-center px-6 py-12 lg:px-8 xl:px-24">
             <div class="sm:mx-auto sm:w-full sm:max-w-md">
                 <!-- Mobile Logo -->
-                <div class="lg:hidden flex justify-center mb-6">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#1e3a5f]">
-                        <svg class="w-10 h-10 text-white" viewBox="0 0 100 100" fill="currentColor">
-                            <path d="M50 15 C40 30, 35 50, 38 65 C41 78, 48 85, 50 85 C52 85, 59 78, 62 65 C65 50, 60 30, 50 15 Z" opacity="0.9"/>
-                            <path d="M35 25 C20 40, 15 60, 22 75 C27 85, 38 88, 45 82 C38 78, 32 65, 32 50 C32 40, 35 30, 35 25 Z" opacity="0.5"/>
-                            <path d="M65 25 C80 40, 85 60, 78 75 C73 85, 62 88, 55 82 C62 78, 68 65, 68 50 C68 40, 65 30, 65 25 Z" opacity="0.5"/>
-                        </svg>
-                    </div>
+                <div class="lg:hidden flex flex-col items-center mb-8">
+                    <img src="{{ asset('logo.png') }}" alt="Logo" class="w-16 h-16 rounded-full object-cover shadow mb-2">
+                    <h1 class="text-lg font-bold text-[#064c30] text-center">PT Persada Nawa Kartika</h1>
+                    <p class="text-xs text-green-800 tracking-widest uppercase text-center">POS & Stock Management System</p>
                 </div>
 
                 <!-- Header -->
                 <h2 class="text-center text-2xl font-bold tracking-tight text-slate-900 lg:text-left mb-2">
                     Sign in to your account
                 </h2>
-                <p class="text-center text-sm text-slate-600 lg:text-left mb-8">
+                <p class="text-center text-sm text-slate-600 lg:text-left mb-2">
                     Enter your credentials to access the dashboard
                 </p>
             </div>
 
-            <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="sm:mx-auto sm:w-full sm:max-w-md bg-white/90 rounded-2xl shadow-xl p-8 mt-6">
                 <!-- Success Message -->
                 @if(session('success'))
                     <div class="mb-6 rounded-lg bg-green-50 p-4 border border-green-200">
@@ -124,7 +112,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
                     <!-- Email Field -->
@@ -142,7 +130,7 @@
                                 autofocus
                                 value="{{ old('email') }}"
                                 placeholder="you@example.com"
-                                class="block w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-[#2d4a7c] focus:outline-none focus:ring-2 focus:ring-[#2d4a7c]/20 sm:text-sm"
+                                class="block w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-[#064c30] focus:outline-none focus:ring-2 focus:ring-[#064c30]/20 sm:text-sm"
                             >
                         </div>
                     </div>
@@ -153,7 +141,7 @@
                             <label for="password" class="block text-sm font-medium text-slate-700">
                                 Password
                             </label>
-                            <a href="#" class="text-sm font-medium text-[#2d4a7c] hover:text-[#1e3a5f] transition-colors">
+                            <a href="#" class="text-sm font-medium text-[#064c30] hover:text-[#064c30] transition-colors">
                                 Forgot password?
                             </a>
                         </div>
@@ -165,7 +153,7 @@
                                 autocomplete="current-password"
                                 required
                                 placeholder="••••••••"
-                                class="block w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-[#2d4a7c] focus:outline-none focus:ring-2 focus:ring-[#2d4a7c]/20 sm:text-sm"
+                                class="block w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-[#064c30] focus:outline-none focus:ring-2 focus:ring-[#064c30]/20 sm:text-sm"
                             >
                             <button
                                 type="button"
@@ -184,24 +172,11 @@
                         </div>
                     </div>
 
-                    <!-- Remember Me -->
-                    <div class="flex items-center">
-                        <input
-                            id="remember"
-                            name="remember"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-slate-300 text-[#2d4a7c] focus:ring-[#2d4a7c]/20"
-                        >
-                        <label for="remember" class="ml-3 text-sm text-slate-600">
-                            Remember me for 30 days
-                        </label>
-                    </div>
-
                     <!-- Submit Button -->
-                    <div>
+                    <div class="mt-8">
                         <button
                             type="submit"
-                            class="flex w-full justify-center rounded-lg bg-[#2d4a7c] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#1e3a5f] focus:outline-none focus:ring-2 focus:ring-[#2d4a7c] focus:ring-offset-2"
+                            class="flex w-full justify-center rounded-lg bg-[#064c30] px-4 py-3 text-base font-bold text-white shadow-sm transition-all hover:bg-[#064c30] focus:outline-none focus:ring-2 focus:ring-[#064c30] focus:ring-offset-2"
                         >
                             Sign in
                         </button>
@@ -210,7 +185,7 @@
 
                 <!-- Footer -->
                 <p class="mt-12 text-center text-xs text-slate-500">
-                    © {{ date('Y') }} Ngarumi. All rights reserved.
+                    © {{ date('Y') }} Penak. All rights reserved.
                 </p>
             </div>
         </div>
@@ -237,7 +212,7 @@
         setInterval(function() {
             fetch('/refresh-csrf')
                 .then(response => response.json())
-                .then(data => {
+                .then data => {
                     document.querySelector('input[name="_token"]').value = data.token;
                     document.querySelector('meta[name="csrf-token"]').content = data.token;
                 })

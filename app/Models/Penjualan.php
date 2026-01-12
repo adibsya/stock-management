@@ -25,6 +25,8 @@ class Penjualan extends Model
         'pajak',
         'total_bayar',
         'metode_pembayaran',
+        'mode_termin',
+        'jatuh_tempo',
         'status',
     ];
     /**

@@ -44,7 +44,7 @@ class PelangganTable extends Component
         $pelanggan = Pelanggan::find($id);
         if ($pelanggan) {
             $pelanggan->delete();
-            $this->dispatch('notify', message: 'Pelanggan berhasil dihapus!');
+            $this->dispatch('pelanggan-deleted');
         }
     }
 
@@ -54,8 +54,7 @@ class PelangganTable extends Component
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('nama_pelanggan', 'like', '%' . $this->search . '%')
-                        ->orWhere('no_hp', 'like', '%' . $this->search . '%')
-                        ->orWhere('email', 'like', '%' . $this->search . '%');
+                        ->orWhere('no_hp', 'like', '%' . $this->search . '%');
                 });
             })
             ->orderBy($this->sortBy, $this->sortDirection)

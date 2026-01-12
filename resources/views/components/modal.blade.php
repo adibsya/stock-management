@@ -10,8 +10,12 @@ $maxWidthClass = [
 ][$maxWidth];
 @endphp
 
+@php
+$wireModel = $attributes->get('wire:model');
+$entangle = $wireModel ? "@entangle('{$wireModel}')->defer" : 'false';
+@endphp
 <div 
-    x-data="{ show: @entangle($attributes->wire('model')) }"
+    x-data="{ show: {{ $entangle }} }"
     x-show="show"
     x-on:keydown.escape.window="show = false"
     class="fixed inset-0 z-50 overflow-y-auto"

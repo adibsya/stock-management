@@ -1,5 +1,5 @@
 <x-layouts.app>
-    <x-slot:title>Kasir / POS - Ngarumi</x-slot:title>
+    <x-slot:title>Kasir / POS</x-slot:title>
     <x-slot:header>Kasir / Point of Sale</x-slot:header>
 
     <livewire:point-of-sale />

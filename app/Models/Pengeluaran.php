@@ -13,26 +13,22 @@ class Pengeluaran extends Model
         'jenis_pengeluaran',
         'jumlah_biaya',
         'keterangan',
+        'gudang_id',
+        'user_id',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
-        'jumlah_biaya' => 'decimal:2',
+        'jumlah_biaya' => 'integer',
     ];
 
-    /**
-     * Scope: Filter by date range
-     */
-    public function scopeDateRange($query, $startDate, $endDate)
+    public function gudang()
     {
-        return $query->whereBetween('tanggal', [$startDate, $endDate]);
+        return $this->belongsTo(Gudang::class);
     }
 
-    /**
-     * Scope: Filter by jenis pengeluaran
-     */
-    public function scopeJenis($query, string $jenis)
+    public function user()
     {
-        return $query->where('jenis_pengeluaran', $jenis);
+        return $this->belongsTo(User::class);
     }
 }

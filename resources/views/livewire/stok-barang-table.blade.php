@@ -22,12 +22,12 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('barang_master_id')">Kode</th>
-                        <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('barang_master_id')">Nama Barang</th>
-                        <th class="table-header px-4 py-3">Gudang</th>
-                        <th class="table-header px-4 py-3">Stok</th>
-                        <th class="table-header px-4 py-3">Stok Minimum</th>
-                        <th class="table-header px-4 py-3">Harga Beli</th>
+                        <th class="table-header cursor-pointer" wire:click="sortBy('barang_master_id')">Kode</th>
+                        <th class="table-header cursor-pointer" wire:click="sortBy('barang_master_id')">Nama Barang</th>
+                        <th class="table-header">Gudang</th>
+                        <th class="table-header">Stok</th>
+                        <th class="table-header">Stok Minimum</th>
+                        <th class="table-header">Harga Beli</th>
                     </tr>
                 </thead>
                 <tbody>

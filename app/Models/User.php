@@ -39,6 +39,7 @@ class User extends Authenticatable
         'password',
         'role',
         'gudang_id',
+        'foto',
     ];
 
     /**

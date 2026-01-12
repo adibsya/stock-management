@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('detail_pembelian', function (Blueprint $table) {
-            if (!Schema::hasColumn('detail_pembelian', 'barang_id')) {
+        if (!Schema::hasColumn('detail_pembelian', 'barang_id')) {
+            Schema::table('detail_pembelian', function (Blueprint $table) {
                 $table->foreignId('barang_id')
                       ->after('pembelian_id')
                       ->constrained('barang_master')
                       ->cascadeOnDelete();
-            }
-        });
+            });
+        }
     }
 
     public function down(): void

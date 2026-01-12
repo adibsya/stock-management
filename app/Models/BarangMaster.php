@@ -9,6 +9,15 @@ class BarangMaster extends Model
 {
     use HasFactory;
 
+    /**
+     * Relasi ke detail penjualan
+     */
+    public function detailPenjualan()
+    {
+        return $this->hasMany(\App\Models\DetailPenjualan::class, 'barang_id');
+    }
+    use HasFactory;
+
     protected $table = 'barang_master';
 
     protected $fillable = [

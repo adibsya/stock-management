@@ -28,11 +28,19 @@ class Retur extends Model
     ];
 
     /**
-     * Get barang for this retur
+     * Get barang master for this retur
      */
     public function barang(): BelongsTo
     {
-        return $this->belongsTo(Barang::class, 'barang_id');
+        return $this->belongsTo(BarangMaster::class, 'barang_id');
+    }
+
+    /**
+     * Get penjualan for this retur
+     */
+    public function penjualan(): BelongsTo
+    {
+        return $this->belongsTo(Penjualan::class, 'referensi_faktur', 'no_faktur');
     }
 
     /**

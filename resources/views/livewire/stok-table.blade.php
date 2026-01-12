@@ -7,19 +7,19 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="table-header px-4 py-3">Kode</th>
-                        <th class="table-header px-4 py-3">Nama Barang</th>
-                        <th class="table-header px-4 py-3">Gudang</th>
-                        <th class="table-header px-4 py-3 text-right">Stok</th>
+                        <th class="table-header">Kode</th>
+                        <th class="table-header">Nama Barang</th>
+                        <th class="table-header">Gudang</th>
+                        <th class="table-header text-right">Stok</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($stoks as $stok)
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="table-cell px-4 font-mono text-sm">{{ $stok->barangMaster->kode_barang ?? '-' }}</td>
-                            <td class="table-cell px-4">{{ $stok->barangMaster->nama_barang ?? '-' }}</td>
-                            <td class="table-cell px-4">{{ $stok->gudang->nama_gudang ?? '-' }}</td>
-                            <td class="table-cell px-4 text-right">{{ $stok->jumlah }}</td>
+                            <td class="table-cell font-mono text-sm">{{ $stok->barangMaster->kode_barang ?? '-' }}</td>
+                            <td class="table-cell">{{ $stok->barangMaster->nama_barang ?? '-' }}</td>
+                            <td class="table-cell">{{ $stok->gudang->nama_gudang ?? '-' }}</td>
+                            <td class="table-cell text-right">{{ $stok->jumlah }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -31,6 +31,10 @@
         </div>
         <div class="px-4 py-3 border-t border-gray-200">
             {{ $stoks->links() }}
+            <div class="mt-4 text-right">
+                <span class="text-sm font-semibold text-gray-700">Total Stok: </span>
+                <span class="text-lg font-bold text-sky-700">{{ number_format($totalStok) }}</span>
+            </div>
         </div>
     </div>
 </div>

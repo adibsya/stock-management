@@ -44,29 +44,44 @@ class UserTable extends Component
     public function delete(int $id): void
     {
         if (!auth()->user()->isSuperAdmin()) {
-            $this->dispatch('notify', message: 'Anda tidak memiliki akses untuk menghapus user!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Anda tidak memiliki akses untuk menghapus user!'
+            ]);
             return;
         }
 
         $user = User::find($id);
         
         if (!$user) {
-            $this->dispatch('notify', message: 'User tidak ditemukan!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'User tidak ditemukan!'
+            ]);
             return;
         }
 
         if ($user->isSuperAdmin()) {
-            $this->dispatch('notify', message: 'Super admin tidak dapat dihapus!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Super admin tidak dapat dihapus!'
+            ]);
             return;
         }
 
         if ($user->id === auth()->id()) {
-            $this->dispatch('notify', message: 'Anda tidak dapat menghapus akun Anda sendiri!');
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Anda tidak dapat menghapus akun Anda sendiri!'
+            ]);
             return;
         }
 
         $user->delete();
-        $this->dispatch('notify', message: 'User berhasil dihapus!');
+        $this->dispatch('show-alert', [
+            'type' => 'success',
+            'message' => 'User berhasil dihapus!'
+        ]);
     }
 
     public function render()

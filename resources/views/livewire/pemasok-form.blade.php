@@ -1,5 +1,5 @@
-<div>
-    <form wire:submit="save" class="card max-w-xl">
+<div class="flex justify-center items-center bg-gray-50">
+    <form wire:submit="save" class="card max-w-xl w-full shadow-lg p-8">
         <div class="space-y-6">
             <div>
                 <label for="nama_supplier" class="block text-sm font-medium text-gray-700 mb-1">Nama Supplier *</label>
@@ -20,8 +20,8 @@
             </div>
 
             <div>
-                <label for="catatan_termin_pembayaran" class="block text-sm font-medium text-gray-700 mb-1">Catatan Termin Pembayaran</label>
-                <textarea id="catatan_termin_pembayaran" wire:model="catatan_termin_pembayaran" class="input-field" rows="2" placeholder="Contoh: Pembayaran 30 hari setelah invoice"></textarea>
+                <label for="catatan_termin_pembayaran" class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                <textarea id="catatan_termin_pembayaran" wire:model="catatan_termin_pembayaran" class="input-field" rows="2" placeholder="Tambahkan Keterangan Jika Perlu"></textarea>
                 @error('catatan_termin_pembayaran') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
         </div>

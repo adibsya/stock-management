@@ -28,28 +28,28 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="table-header px-4 py-3 cursor-pointer" wire:click="sortBy('nama_gudang')">
+                        <th class="table-header cursor-pointer" wire:click="sortBy('nama_gudang')">
                             Nama Gudang
                             @if($sortBy === 'nama_gudang')
                                 <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                             @endif
                         </th>
-                        <th class="table-header px-4 py-3">Lokasi</th>
-                        <th class="table-header px-4 py-3 text-center">Jumlah Barang</th>
-                        <th class="table-header px-4 py-3 text-center">Aksi</th>
+                        <th class="table-header">Lokasi</th>
+                        <th class="table-header text-center">Stok di Gudang</th>
+                        <th class="table-header text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($gudangs as $gudang)
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="table-cell px-4 font-medium">{{ $gudang->nama_gudang }}</td>
-                            <td class="table-cell px-4">{{ $gudang->lokasi ?? '-' }}</td>
-                            <td class="table-cell px-4 text-center">
+                            <td class="table-cell font-medium">{{ $gudang->nama_gudang }}</td>
+                            <td class="table-cell">{{ $gudang->lokasi ?? '-' }}</td>
+                            <td class="table-cell text-center">
                                 <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                                    {{ $gudang->barang_count ?? 0 }} item
+                                    {{ $gudang->stokBarangs->sum('jumlah') }} item
                                 </span>
                             </td>
-                            <td class="table-cell px-4 text-center">
+                            <td class="table-cell text-center">
                                 @if(auth()->user()->role === 'super_admin')
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('gudang.edit', $gudang) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
@@ -57,7 +57,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </a>
-                                    <button wire:click="delete({{ $gudang->id }})" wire:confirm="Yakin ingin menghapus gudang ini?" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                    <button onclick="event.preventDefault(); confirmDelete(@this, {{ $gudang->id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -85,3 +85,33 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function confirmDelete(livewire, id) {
+        Swal.fire({
+            title: 'Yakin ingin menghapus gudang ini?',
+            text: 'Data yang dihapus tidak dapat dikembalikan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                livewire.call('delete', id);
+            }
+        });
+    }
+
+    window.addEventListener('gudang-deleted', function(e) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Gudang berhasil dihapus.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+</script>
+@endpush

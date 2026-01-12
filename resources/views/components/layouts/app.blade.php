@@ -1,4 +1,4 @@
-@props(['title' => 'Ngarumi - Sistem Manajemen Stok & POS', 'header' => 'Dashboard', 'subtitle' => null])
+@props(['title' => 'Penak - Sistem Manajemen Stok & POS', 'header' => '', 'subtitle' => null])
 
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -11,26 +11,21 @@
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="h-full bg-gray-50">
     <div class="flex h-full">
         <!-- Sidebar -->
         <aside class="sidebar flex flex-col">
             <!-- Brand -->
-            <div class="sidebar-brand flex-shrink-0">
-                <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-lg font-bold text-gray-900">Ngarumi</span>
-                    <span class="block text-xs text-gray-400 -mt-0.5">Stock & POS</span>
-                </div>
+            <div class="sidebar-brand flex-shrink-0 flex flex-col items-center mt-4">
+                <img src="{{ asset('logo.png') }}" alt="Logo" class="w-24 h-10" style="margin-top:-12px;">
+                <span class="block text-xs text-gray-400 -mt-0.5">Stock & POS</span>
             </div>
             
             <!-- Navigation -->
             <nav class="sidebar-nav flex-1 overflow-y-auto">
+                @php $isViewer = auth()->user()->role === 'viewer'; @endphp
                 <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -38,7 +33,7 @@
                     Dashboard
                 </a>
 
-                @if(auth()->user()->isSuperAdmin())
+                @if(auth()->user()->isSuperAdmin() && !$isViewer)
                 <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -46,9 +41,9 @@
                     User Management
                 </a>
                 @endif
-                
-                @if(auth()->user()->canModify())
-                <a href="{{ route('pos') }}" class="sidebar-link {{ request()->routeIs('pos') ? 'active' : '' }}">
+
+                @if(auth()->user()->canModify() && !$isViewer)
+                <a href="{{ route('pos.index') }}" class="sidebar-link {{ request()->routeIs('pos.index') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
@@ -59,28 +54,27 @@
                 <div class="sidebar-section">
                     <p class="sidebar-section-title">Master Data</p>
                 </div>
-                
+
                 <a href="{{ route('barang.index') }}" class="sidebar-link {{ request()->routeIs('barang.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 10h16v11H4V10z"></path>
                     </svg>
                     Barang
                 </a>
-                
+
                 <a href="{{ route('pelanggan.index') }}" class="sidebar-link {{ request()->routeIs('pelanggan.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     Pelanggan
                 </a>
-                
+
                 <a href="{{ route('pemasok.index') }}" class="sidebar-link {{ request()->routeIs('pemasok.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                     Pemasok
                 </a>
-                
 
                 <a href="{{ route('gudang.index') }}" class="sidebar-link {{ request()->routeIs('gudang.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,57 +90,66 @@
                     Stok
                 </a>
 
+                @if(!$isViewer)
                 <div class="sidebar-section">
                     <p class="sidebar-section-title">Transaksi</p>
                 </div>
-                
+
                 <a href="{{ route('penjualan.index') }}" class="sidebar-link {{ request()->routeIs('penjualan.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
                     </svg>
                     Penjualan
                 </a>
-                
+
                 <a href="{{ route('pembelian.index') }}" class="sidebar-link {{ request()->routeIs('pembelian.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     Pembelian
                 </a>
-                
-                <a href="{{ route('pengeluaran.index') }}" class="sidebar-link {{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
+
+                <a href="{{ url('/pengeluaran') }}" class="sidebar-link {{ request()->is('pengeluaran*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     Pengeluaran
                 </a>
 
+                <a href="{{ route('retur.index') }}" class="sidebar-link {{ request()->routeIs('retur.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                    Retur
+                </a>
+                @endif
+
                 <div class="sidebar-section">
                     <p class="sidebar-section-title">Laporan</p>
                 </div>
-                
+
                 <a href="{{ route('laporan.laba-rugi') }}" class="sidebar-link {{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                     Laba Rugi
                 </a>
-                
-                <a href="{{ route('laporan.stok') }}" class="sidebar-link {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
+
+                <!-- <a href="{{ route('mutasi-stok.index') }}" class="sidebar-link {{ request()->routeIs('mutasi-stok.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v16m0 0h16m-16 0l16-16" />
                     </svg>
-                    Kartu Stok
-                </a>
+                    Mutasi Stok
+                </a>  -->
             </nav>
 
             <!-- User Menu (Bottom) -->
             <div class="flex-shrink-0 p-4 border-t border-gray-100 bg-white mt-auto">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0 cursor-pointer" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
                         {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
                     </div>
-                    <div class="flex-1 min-w-0">
+                    <div class="flex-1 min-w-0 cursor-pointer" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
                         <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
                         <p class="text-xs text-gray-500 truncate">{{ auth()->user()->role_label }}</p>
                     </div>
@@ -163,20 +166,21 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+        <main class="flex-1 ml-64 flex flex-col min-h-screen">
             <!-- Top Header -->
-            <header class="top-header flex-shrink-0">
+            <header class="top-header">
                 <div class="flex items-center justify-between px-6 py-4">
                     <div>
-                        <h1 class="page-title">{{ $header }}</h1>
+                        <h1 class="page-title text-2xl font-bold text-gray-900 tracking-tight">{{ $header }}</h1>
                         @if($subtitle)
-                            <p class="page-subtitle">{{ $subtitle }}</p>
+                            <p class="page-subtitle text-sm text-gray-500 mt-1">{{ $subtitle }}</p>
                         @endif
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <p class="text-sm font-medium text-gray-900">{{ now()->translatedFormat('l') }}</p>
-                            <p class="text-xs text-gray-500">{{ now()->translatedFormat('d F Y') }}</p>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs text-gray-500 uppercase tracking-wider" id="local-day"></span>
+                            <span class="text-sm text-gray-700 mt-0.5" id="local-date"></span>
+                            <span class="text-xs font-mono text-gray-600 mt-0.5" id="local-time"></span>
                         </div>
                     </div>
                 </div>
@@ -218,14 +222,9 @@
             @endif
 
             <!-- Page Content -->
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 p-6">
                 {{ $slot }}
             </div>
-
-            <!-- Footer -->
-            <footer class="flex-shrink-0 px-6 py-4 text-center text-xs text-gray-400 border-t border-gray-100 bg-white/50">
-                &copy; {{ date('Y') }} Ngarumi POS. All rights reserved.
-            </footer>
         </main>
     </div>
 
@@ -234,70 +233,36 @@
         document.addEventListener('livewire:init', () => {
             Livewire.on('notify', (event) => {
                 const message = event.message || event[0]?.message;
-                const type = event.type || event[0]?.type || 'success';
-                
                 if (message) {
-                    showToast(message, type);
+                    alert(message);
                 }
             });
+
+            Livewire.on('show-alert', (event) => {
+                const data = event[0] || event;
+                Swal.fire({
+                    icon: data.type,
+                    title: data.type === 'success' ? 'Berhasil!' : 'Gagal!',
+                    text: data.message,
+                    confirmButtonColor: data.type === 'success' ? '#10b981' : '#ef4444'
+                });
+            });
         });
-
-        function showToast(message, type = 'success') {
-            // Remove existing toast if any
-            const existing = document.getElementById('livewire-toast');
-            if (existing) existing.remove();
-
-            // Determine colors based on type
-            const config = {
-                success: {
-                    borderColor: 'border-emerald-200',
-                    bgColor: 'bg-emerald-100',
-                    iconColor: 'text-emerald-500',
-                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
-                },
-                error: {
-                    borderColor: 'border-red-200',
-                    bgColor: 'bg-red-100',
-                    iconColor: 'text-red-500',
-                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>'
-                },
-                warning: {
-                    borderColor: 'border-yellow-200',
-                    bgColor: 'bg-yellow-100',
-                    iconColor: 'text-yellow-500',
-                    icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'
-                }
-            };
-
-            const selectedConfig = config[type] || config.success;
-
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.id = 'livewire-toast';
-            toast.className = `fixed top-4 right-4 z-50 flex items-center gap-3 bg-white border ${selectedConfig.borderColor} shadow-lg rounded-lg px-4 py-3 fade-in`;
-            toast.innerHTML = `
-                <div class="w-8 h-8 ${selectedConfig.bgColor} rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 ${selectedConfig.iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        ${selectedConfig.icon}
-                    </svg>
-                </div>
-                <span class="text-sm text-gray-700">${message}</span>
-                <button onclick="this.parentElement.remove()" class="ml-2 text-gray-400 hover:text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            `;
-
-            document.body.appendChild(toast);
-
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                if (toast && toast.parentElement) {
-                    toast.remove();
-                }
-            }, 4000);
-        }
     </script>
+    @stack('scripts')
+
+        <script>
+            function updateLocalTime() {
+                const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                const now = new Date();
+                document.getElementById('local-day').textContent = days[now.getDay()];
+                document.getElementById('local-date').textContent = `${now.getDate().toString().padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+                document.getElementById('local-time').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+            updateLocalTime();
+            setInterval(updateLocalTime, 1000);
+        </script>
+    
 </body>
 </html>
