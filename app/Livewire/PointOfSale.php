@@ -127,8 +127,9 @@ class PointOfSale extends Component
         $this->dispatch('notify', message: 'Berhasil ditambahkan ke keranjang!');
     }
 
-    public function updateQty(int $index, int $qty): void
+    public function updateQty(int $index, $qty): void
     {
+        $qty = (int) $qty;
         if (!isset($this->cart[$index])) return;
 
         if ($qty <= 0) {

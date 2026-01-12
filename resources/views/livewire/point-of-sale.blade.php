@@ -108,7 +108,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                     </svg>
                                 </button>
-                                <span class="w-12 text-center font-bold text-gray-900">{{ $item['jumlah'] }}</span>
+                                <input type="number" 
+                                       value="{{ $item['jumlah'] }}"
+                                       wire:change="updateQty({{ $index }}, $event.target.value)"
+                                       min="1"
+                                       max="{{ $item['stok'] ?? 999 }}"
+                                       class="w-14 text-center font-bold text-gray-900 border border-gray-300 rounded-lg py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] + 1 }})" 
                                         class="w-8 h-8 bg-blue-600 border border-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 transition shadow-sm {{ ($item['jumlah'] >= ($item['stok'] ?? 0)) ? 'opacity-50 cursor-not-allowed' : '' }}"
                                         {{ ($item['jumlah'] >= ($item['stok'] ?? 0)) ? 'disabled' : '' }}>
