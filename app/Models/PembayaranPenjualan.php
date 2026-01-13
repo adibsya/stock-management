@@ -22,6 +22,7 @@ class PembayaranPenjualan extends Model
         'penjualan_id',
         'jumlah',
         'jumlah_bayar',
+        'pembayaran_terakhir',
         'tanggal_jatuh_tempo',
         'tanggal_bayar',
         'metode_pembayaran',

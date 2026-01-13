@@ -117,6 +117,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/termin/{penjualan}', \App\Livewire\PenjualanTerminUpdate::class)->name('termin.update');
         Route::get('/{penjualan}', [PenjualanController::class, 'show'])->name('show');
         Route::get('/{penjualan}/print', [PenjualanController::class, 'print'])->name('print');
+        Route::get('/termin/{pembayaran}/print', [PenjualanController::class, 'printTermin'])->name('termin.print');
     });
 
     // Transaksi - Retur
@@ -143,7 +144,7 @@ Route::middleware('auth')->group(function () {
 
     // Transaksi - Pengeluaran
     Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
-        Route::get('/', App\Livewire\PengeluaranTable::class)->name('index');
+        Route::get('/', fn() => view('pengeluaran.index'))->name('index');
         Route::middleware('role:admin')->group(function () {
             Route::get('/create', App\Livewire\PengeluaranForm::class)->name('create');
             Route::get('/{pengeluaran}/edit', App\Livewire\PengeluaranForm::class)->name('edit');

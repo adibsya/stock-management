@@ -36,16 +36,41 @@
                                 {{ ucfirst($row->status) }}
                             </span>
                         </td>
-                        <td class="table-cell text-center">
-                            @if($row->status !== 'lunas')
-                                <button
-                                    class="btn-primary px-3 py-1 text-sm"
-                                    wire:click="openModalBayar({{ $row->id }})">
-                                    Bayar
-                                </button>
-                            @else
-                                <span class="text-gray-400 text-sm">-</span>
-                            @endif
+                        <td class="table-cell text-center" style="min-width: 200px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center;">
+                                {{-- Kolom Kiri: Bayar --}}
+                                <div style="text-align: center;">
+                                    @if($row->status !== 'lunas')
+                                        <button
+                                            class="btn-primary"
+                                            style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; font-size: 13px; border-radius: 6px; width: 80px;"
+                                            wire:click="openModalBayar({{ $row->id }})">
+                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                            </svg>
+                                            Bayar
+                                        </button>
+                                    @else
+                                        <span style="color: #9ca3af; font-size: 13px;">-</span>
+                                    @endif
+                                </div>
+                                {{-- Kolom Kanan: Print --}}
+                                <div style="text-align: center;">
+                                    @if(($row->jumlah_bayar ?? 0) > 0)
+                                        <a href="{{ route('penjualan.termin.print', $row->id) }}"
+                                           target="_blank"
+                                           style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; font-size: 13px; border-radius: 6px; background-color: #22c55e; color: white; text-decoration: none; width: 80px;"
+                                           title="Cetak Kwitansi">
+                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                            </svg>
+                                            Print
+                                        </a>
+                                    @else
+                                        <span style="color: #9ca3af; font-size: 13px;">-</span>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @endforeach

@@ -78,6 +78,7 @@ class PenjualanTerminTable extends Component
 
         $termin->update([
             'jumlah_bayar' => $total,
+            'pembayaran_terakhir' => $this->jumlah,
             'tanggal_bayar' => $this->tanggal_bayar,
             'metode_pembayaran' => $this->metode_pembayaran,
             'status' => $total >= $termin->jumlah ? 'lunas' : 'belum_lunas',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Penjualan;
+use App\Models\PembayaranPenjualan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -23,5 +24,11 @@ class PenjualanController extends Controller
     {
         $penjualan->load(['pelanggan', 'user', 'detailPenjualan.barang', 'pembayaranPenjualan']);
         return view('penjualan.print', compact('penjualan'));
+    }
+
+    public function printTermin(PembayaranPenjualan $pembayaran): View
+    {
+        $pembayaran->load(['penjualan.pelanggan', 'penjualan.user', 'penjualan.gudang']);
+        return view('penjualan.print-termin', compact('pembayaran'));
     }
 }
