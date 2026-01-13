@@ -1,49 +1,65 @@
 <div>
     <!-- Header -->
     <div class="card mb-6">
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="flex flex-col md:flex-row gap-4 flex-1 w-full md:w-auto">
-                @if($showGudangFilter)
-                <select wire:model.live="gudangId" class="input-field w-full md:w-40">
+        <!-- Row 1: Filters -->
+        <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-end mb-4">
+            @if($showGudangFilter)
+            <div class="flex flex-col w-full lg:w-auto">
+                <label class="text-xs text-gray-600 font-medium mb-1">Gudang</label>
+                <select wire:model.live="gudangId" class="input-field w-full lg:w-40">
                     <option value="">Semua Gudang</option>
                     @foreach($gudangs as $gudang)
                         <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
                     @endforeach
                 </select>
-                @endif
-                <div class="flex flex-col w-full md:w-40">
-                    <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Mulai</label>
-                    <input type="date" wire:model.live="startDate" class="input-field">
-                </div>
-                <div class="flex flex-col w-full md:w-40">
-                    <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Sampai</label>
-                    <input type="date" wire:model.live="endDate" class="input-field">
-                </div>
-                <select wire:model.live="statusBayar" class="input-field w-full md:w-40">
+            </div>
+            @endif
+            <div class="flex flex-col w-full lg:w-auto">
+                <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Mulai</label>
+                <input type="date" wire:model.live="startDate" class="input-field w-full lg:w-40">
+            </div>
+            <div class="flex flex-col w-full lg:w-auto">
+                <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Sampai</label>
+                <input type="date" wire:model.live="endDate" class="input-field w-full lg:w-40">
+            </div>
+            <div class="flex flex-col w-full lg:w-auto">
+                <label class="text-xs text-gray-600 font-medium mb-1">Status Bayar</label>
+                <select wire:model.live="statusBayar" class="input-field w-full lg:w-36">
                     <option value="">Semua Status</option>
                     <option value="lunas">Lunas</option>
                     <option value="belum_lunas">Belum Lunas</option>
                 </select>
             </div>
-            <div class="flex gap-2 flex-col md:flex-row">
-                <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap">
-                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Kasir Pembelian
-                </a>
-                @php
-                    $adaTermin = isset($pembelians) && $pembelians->where('status_bayar', 'belum_lunas')->where('jatuh_tempo', '!=', null)->count() > 0;
-                @endphp
-                <a href="{{ $adaTermin ? route('pembelian.termin') : '#' }}"
-                   class="btn-success whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg shadow transition w-full md:w-auto mt-2 md:mt-0 {{ !$adaTermin ? 'bg-gray-300 text-gray-500 cursor-not-allowed border border-gray-300 hover:bg-gray-300 hover:text-gray-500' : 'hover:bg-green-600' }}"
-                   @if(!$adaTermin) tabindex="-1" aria-disabled="true" title="Tidak ada termin aktif" onclick="return false;" @endif>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-5 4v2m0 0v2m0-2h.01" />
-                    </svg>
-                    <span class="font-semibold">Kasir Termin</span>
-                </a>
+            <div class="flex flex-col w-full lg:w-auto">
+                <label class="text-xs text-gray-600 font-medium mb-1">Kategori Produk</label>
+                <select wire:model.live="kategoriProduk" class="input-field w-full lg:w-40">
+                    <option value="">Semua Kategori</option>
+                    @foreach($kategoris as $kategori)
+                        <option value="{{ $kategori }}">{{ $kategori }}</option>
+                    @endforeach
+                </select>
             </div>
+        </div>
+        
+        <!-- Row 2: Action Buttons -->
+        <div class="flex gap-3 flex-wrap">
+            <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Kasir Pembelian
+            </a>
+            @php
+                $adaTermin = isset($pembelians) && $pembelians->where('status_bayar', 'belum_lunas')->where('jatuh_tempo', '!=', null)->count() > 0;
+            @endphp
+            <a href="{{ $adaTermin ? route('pembelian.termin') : '#' }}"
+               class="btn-success whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg shadow transition {{ !$adaTermin ? 'bg-gray-300 text-gray-500 cursor-not-allowed border border-gray-300 hover:bg-gray-300 hover:text-gray-500' : 'hover:bg-green-600' }}"
+               @if(!$adaTermin) tabindex="-1" aria-disabled="true" title="Tidak ada termin aktif" onclick="return false;" @endif>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-5 4v2m0 0v2m0-2h.01" />
+                </svg>
+                <span class="font-semibold">Kasir Termin</span>
+            </a>
         </div>
     </div>
 

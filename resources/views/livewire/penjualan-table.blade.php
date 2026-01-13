@@ -22,6 +22,12 @@
                     <option value="selesai">Selesai</option>
                     <option value="belum_lunas">Belum Lunas</option>
                 </select>
+                <select wire:model.live="kategoriProduk" class="input-field w-full md:w-44">
+                    <option value="">Semua Kategori</option>
+                    @foreach($kategoris as $kategori)
+                        <option value="{{ $kategori }}">{{ $kategori }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>

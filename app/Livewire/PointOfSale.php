@@ -21,6 +21,7 @@ class PointOfSale extends Component
     public int $jumlah_termin = 2;
     public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
+    public string $diskon = '0';
     public function updatedTermin($value)
     {
         $this->setDefaultTermins();
@@ -146,8 +147,17 @@ class PointOfSale extends Component
             $subtotal += $sisa * $harga_jual;
             $harga_jual = $harga_jual; // harga satuan untuk sisa
         }
-        $key = array_search($barangMasterId, array_column($this->cart, 'barang_id'));
-        if ($key !== false) {
+        // Cari item di cart secara manual untuk memastikan index yang tepat
+        $key = null;
+        foreach ($this->cart as $index => $item) {
+            if ($item['barang_id'] == $barangMasterId) {
+                // Pastikan tipe data sama atau bandingkan secara loose
+                $key = $index;
+                break;
+            }
+        }
+
+        if ($key !== null) {
             if ($this->cart[$key]['jumlah'] >= $stok->jumlah) {
                 $this->dispatch('show-alert', [
                     'type' => 'error',
@@ -177,6 +187,7 @@ class PointOfSale extends Component
                     $sisa -= $bundleCount * $bundleQty;
                 }
                 $subtotal += $sisa * $barang->harga_jual;
+                
                 $this->cart[$key]['subtotal'] = $subtotal;
                 $this->cart[$key]['harga_satuan'] = $barang->harga_jual;
                 $this->cart[$key]['bonus'] = $bonus;
@@ -282,6 +293,7 @@ class PointOfSale extends Component
         $this->cart = [];
         $this->pelanggan_id = null;
         $this->bayar = '0';
+        $this->diskon = '0';
     }
 
     public function getSubtotalProperty(): float
@@ -291,7 +303,7 @@ class PointOfSale extends Component
 
     public function getDiskonProperty(): float
     {
-        return 0;
+        return (float) $this->diskon;
     }
 
     public function getTotalProperty(): float
@@ -338,7 +350,7 @@ class PointOfSale extends Component
     {
         $validCart = [];
         foreach ($this->cart as $item) {
-            $barang = Barang::find($item['barang_id']);
+            $barang = BarangMaster::find($item['barang_id']);
             if ($barang) {
                 // Update stok terbaru
                 $item['stok'] = $barang->stok;
@@ -464,6 +476,13 @@ class PointOfSale extends Component
                 'message' => 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur
             ]);
 
+            // Buka halaman print invoice untuk transaksi termin
+            if ($this->termin !== '0') {
+                $this->dispatch('open-print-invoice', [
+                    'url' => route('penjualan.print', $penjualan->id)
+                ]);
+            }
+
         } catch (\Exception $e) {
             $this->dispatch('show-alert', [
                 'type' => 'error',
@@ -499,10 +518,10 @@ class PointOfSale extends Component
                 });
             });
 
-        // Kelompokkan berdasarkan kategori dari master
-        $barangs = $barangsQuery->get()->groupBy(function($barang) {
-            return $barang->master->kategori ?? 'Lainnya';
-        });
+// $barangs = $barangs->get()->groupBy(function($barang) {
+        //     return $barang->master->kategori ?? 'Lainnya';
+        // });
+        $barangs = $barangs->get();
 
         $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
 
