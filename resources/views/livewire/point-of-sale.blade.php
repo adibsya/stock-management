@@ -32,7 +32,7 @@
         <!-- Product Grid -->
         <div class="card-compact flex-1 overflow-y-auto relative">
             <!-- Loading Overlay -->
-            <div wire:loading.delay wire:target="gudang_id" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl">
+            <div wire:loading wire:target="gudang_id, searchBarang" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl">
                 <div class="relative">
                     <div class="w-16 h-16 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
                     <svg class="w-8 h-8 text-sky-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,18 +42,7 @@
                 <p class="mt-4 text-sky-600 font-medium animate-pulse">Memuat data barang...</p>
             </div>
 
-            @if($isLoading)
-            <!-- Skeleton Loading -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                @for($i = 0; $i < 8; $i++)
-                <div class="p-4 border border-gray-200 rounded-xl animate-pulse">
-                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div class="h-3 bg-gray-100 rounded w-1/2 mb-3"></div>
-                    <div class="h-5 bg-sky-100 rounded w-2/3"></div>
-                </div>
-                @endfor
-            </div>
-            @elseif(!$gudang_id)
+            @if(!$gudang_id)
                 <div class="flex flex-col items-center justify-center h-full text-gray-400">
                     <svg class="w-20 h-20 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>

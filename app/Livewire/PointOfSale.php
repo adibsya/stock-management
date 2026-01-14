@@ -22,10 +22,9 @@ class PointOfSale extends Component
     public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
     public string $diskon = '0';
-    public bool $isLoading = false;
+
     public function updatedGudangId($value)
     {
-        $this->isLoading = true;
         $this->cart = []; // Clear cart when gudang changes
     }
 
