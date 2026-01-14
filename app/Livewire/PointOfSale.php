@@ -18,10 +18,17 @@ class PointOfSale extends Component
     public ?int $pelanggan_id = null;
     public string $termin = '0'; // '0' = tunai, '1' = termin sekali, '2' = termin bertahap
     public array $termins = [];
-    public int $jumlah_termin = 2;
+    public string $jumlah_termin = '2';
     public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
     public string $diskon = '0';
+    public bool $isLoading = false;
+    public function updatedGudangId($value)
+    {
+        $this->isLoading = true;
+        $this->cart = []; // Clear cart when gudang changes
+    }
+
     public function updatedTermin($value)
     {
         $this->setDefaultTermins();
@@ -512,7 +519,7 @@ class PointOfSale extends Component
                 $q->where('gudang_id', $this->gudang_id);
             }])
             ->when($this->searchBarang, function ($query) {
-                $query->whereHas('master', function ($q) {
+                $query->where(function ($q) {
                     $q->where('nama_barang', 'like', '%' . $this->searchBarang . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->searchBarang . '%');
                 });
