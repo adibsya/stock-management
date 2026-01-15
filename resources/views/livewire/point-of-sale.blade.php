@@ -152,15 +152,7 @@
                             <div class="flex-1 min-w-0">
                                 <p class="font-semibold text-gray-900 truncate">{{ $item['nama_barang'] }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5">Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }} / {{ $item['satuan'] ?? 'pcs' }}
-                                    @php
-                                        $isNuklerr = false;
-                                        $nama = strtolower($item['nama_barang'] ?? '');
-                                        $kode = strtolower($item['kode_barang'] ?? '');
-                                        if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
-                                            $isNuklerr = true;
-                                        }
-                                    @endphp
-                                    @if($isNuklerr && isset($item['bonus']) && $item['bonus'] > 0)
+                                    @if(isset($item['bonus']) && $item['bonus'] > 0)
                                         <span class="ml-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold text-xs">+{{ $item['bonus'] }} bonus</span>
                                     @endif
                                 </p>
@@ -171,21 +163,25 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 mt-2">
                             <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] - 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">-</button>
                             <input type="number" min="1" :max="$item['stok']" class="w-14 text-center text-lg font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ $item['jumlah'] }}"
                                 wire:change="updateQty({{ $index }}, $event.target.value)"
                                 wire:keydown.enter="updateQty({{ $index }}, $event.target.value)"
                                 >
                             <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] + 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">+</button>
-                            @php
-                                $isNuklerr = false;
-                                $nama = strtolower($item['nama_barang'] ?? '');
-                                $kode = strtolower($item['kode_barang'] ?? '');
-                                if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
-                                    $isNuklerr = true;
-                                }
-                            @endphp
+                            
+                            <!-- Bonus Input -->
+                            <div class="flex items-center gap-1 ml-2 pl-2 border-l border-gray-200">
+                                <span class="text-xs text-green-600 font-medium">Bonus</span>
+                                <input type="number" min="0" 
+                                    class="w-12 text-center text-sm font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50" 
+                                    value="{{ ($item['bonus'] ?? 0) > 0 ? $item['bonus'] : '' }}"
+                                    wire:change="updateBonus({{ $index }}, $event.target.value)"
+                                    wire:keydown.enter="updateBonus({{ $index }}, $event.target.value)"
+                                    placeholder="0"
+                                    title="Jumlah Bonus Gratis">
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -318,7 +314,6 @@
                     Bayar
                 </button>
             </div>
-            @endif
         </div>
     </div>
 </div>

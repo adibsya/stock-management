@@ -3,10 +3,15 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\PembayaranPenjualan;
+use App\Models\Pelanggan;
 
 class PenjualanTerminTable extends Component
 {
     public $termins = [];
+    public $pelangans = [];
+    public $pelangganId = '';
+    public $search = '';
+    public $statusFilter = '';
 
     public bool $showModal = false;
     public ?PembayaranPenjualan $selectedTermin = null;
@@ -18,6 +23,30 @@ class PenjualanTerminTable extends Component
 
     public function mount()
     {
+        $this->loadPelanggans();
+        $this->loadTermins();
+    }
+
+    public function loadPelanggans()
+    {
+        // Get pelanggan yang punya termin belum lunas
+        $this->pelangans = Pelanggan::whereHas('penjualan.pembayaranPenjualan', function ($q) {
+            $q->where('status', '!=', 'lunas');
+        })->orderBy('nama_pelanggan')->get();
+    }
+
+    public function updatedPelangganId()
+    {
+        $this->loadTermins();
+    }
+
+    public function updatedSearch()
+    {
+        $this->loadTermins();
+    }
+
+    public function updatedStatusFilter()
+    {
         $this->loadTermins();
     }
 
@@ -25,15 +54,31 @@ class PenjualanTerminTable extends Component
     {
         $user = auth()->user();
         
-        $this->termins = PembayaranPenjualan::with('penjualan.pelanggan')
+        $query = PembayaranPenjualan::with('penjualan.pelanggan')
             // Filter berdasarkan gudang untuk admin gudang
             ->when($user && $user->role === 'admin' && $user->gudang_id, function ($query) use ($user) {
                 $query->whereHas('penjualan', function ($q) use ($user) {
                     $q->where('gudang_id', $user->gudang_id);
                 });
             })
-            ->orderBy('tanggal_jatuh_tempo')
-            ->get();
+            // Filter by pelanggan
+            ->when($this->pelangganId, function ($query) {
+                $query->whereHas('penjualan', function ($q) {
+                    $q->where('pelanggan_id', $this->pelangganId);
+                });
+            })
+            // Filter by search (no faktur)
+            ->when($this->search, function ($query) {
+                $query->whereHas('penjualan', function ($q) {
+                    $q->where('no_faktur', 'like', '%' . $this->search . '%');
+                });
+            })
+            // Filter by status
+            ->when($this->statusFilter, function ($query) {
+                $query->where('status', $this->statusFilter);
+            });
+
+        $this->termins = $query->orderBy('tanggal_jatuh_tempo')->get();
     }
 
     public function openModalBayar($id)
@@ -85,6 +130,7 @@ class PenjualanTerminTable extends Component
         ]);
 
         $this->loadTermins();
+        $this->loadPelanggans();
         $this->closeModal();
 
         $this->dispatch('show-alert', [
@@ -97,8 +143,10 @@ class PenjualanTerminTable extends Component
     {
         return view('livewire.penjualan-termin-table', [
             'termins' => $this->termins,
+            'pelangans' => $this->pelangans,
             'showModal' => $this->showModal,
             'selectedTermin' => $this->selectedTermin,
         ]);
     }
 }
+

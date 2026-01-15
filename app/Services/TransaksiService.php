@@ -119,7 +119,7 @@ class TransaksiService
         }
 
         // =========================
-        // 5. JURNAL PENJUALAN
+        // 5. JURNAL PENJUALAN (optional - skip if COA not found)
         // =========================
         $akunPendapatan = PosMasterData::where('kode', '4-01-01')->first();
         $akunKas = PosMasterData::where('kode', '1-01-01')->first();
@@ -131,33 +131,39 @@ class TransaksiService
             $debitAkun = $akunKas;
         }
 
-        app(\App\Services\JurnalService::class)->create(
-            $penjualan->tanggal,
-            'Penjualan ' . $penjualan->no_faktur,
-            'penjualan',
-            $penjualan->id,
-            [
-                ['coa_id' => $debitAkun->id, 'debit' => $totalBayar],
-                ['coa_id' => $akunPendapatan->id, 'kredit' => $totalBayar],
-            ]
-        );
+        // Only create jurnal if all COA accounts exist
+        if ($debitAkun && $akunPendapatan) {
+            app(\App\Services\JurnalService::class)->create(
+                $penjualan->tanggal,
+                'Penjualan ' . $penjualan->no_faktur,
+                'penjualan',
+                $penjualan->id,
+                [
+                    ['coa_id' => $debitAkun->id, 'debit' => $totalBayar],
+                    ['coa_id' => $akunPendapatan->id, 'kredit' => $totalBayar],
+                ]
+            );
+        }
 
         // =========================
-        // 6. JURNAL HPP
+        // 6. JURNAL HPP (optional - skip if COA not found)
         // =========================
         $akunHpp = PosMasterData::where('kode', '5-01-01')->first();
         $akunPersediaan = PosMasterData::where('kode', '1-01-04')->first();
 
-        app(\App\Services\JurnalService::class)->create(
-            $penjualan->tanggal,
-            'HPP Penjualan ' . $penjualan->no_faktur,
-            'penjualan',
-            $penjualan->id,
-            [
-                ['coa_id' => $akunHpp->id, 'debit' => $hpp],
-                ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
-            ]
-        );
+        // Only create HPP jurnal if all COA accounts exist
+        if ($akunHpp && $akunPersediaan) {
+            app(\App\Services\JurnalService::class)->create(
+                $penjualan->tanggal,
+                'HPP Penjualan ' . $penjualan->no_faktur,
+                'penjualan',
+                $penjualan->id,
+                [
+                    ['coa_id' => $akunHpp->id, 'debit' => $hpp],
+                    ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
+                ]
+            );
+        }
 
         return $penjualan->load('detailPenjualan.barang');
     });

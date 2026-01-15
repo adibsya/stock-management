@@ -21,7 +21,7 @@ class PointOfSale extends Component
     public string $jumlah_termin = '2';
     public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
-    public string $diskon = '0';
+    public string $diskon = '';
 
     public function updatedGudangId($value)
     {
@@ -132,14 +132,7 @@ class PointOfSale extends Component
                 $qty = $this->cart[$key]['jumlah'] + 1;
             }
             
-            // Hitung bonus berdasarkan qty
-            if ($qty >= 600) {
-                $bonus = floor($qty / 600) * 30; // 600 pcs bonus 30
-            } elseif ($qty >= 100) {
-                $bonus = floor($qty / 100) * 5; // 100 pcs bonus 5
-            } elseif ($qty >= 20) {
-                $bonus = floor($qty / 20) * 1; // 20 pcs bonus 1
-            }
+            // Bundling logic untuk harga saja, bonus diinput manual
             
             // Bundling logic
             $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
@@ -175,28 +168,9 @@ class PointOfSale extends Component
             if ($isNukleer) {
                 $qty = $this->cart[$key]['jumlah'];
                 
-                // Hitung bonus berdasarkan qty
-                if ($qty >= 600) {
-                    $bonus = floor($qty / 600) * 30;
-                } elseif ($qty >= 100) {
-                    $bonus = floor($qty / 100) * 5;
-                } elseif ($qty >= 20) {
-                    $bonus = floor($qty / 20) * 1;
-                }
-                
-                $bundles = [600 => 5100000, 100 => 870000, 10 => 91000];
-                $sisa = $qty;
-                $subtotal = 0;
-                foreach ($bundles as $bundleQty => $bundlePrice) {
-                    $bundleCount = intdiv($sisa, $bundleQty);
-                    $subtotal += $bundleCount * $bundlePrice;
-                    $sisa -= $bundleCount * $bundleQty;
-                }
-                $subtotal += $sisa * $barang->harga_jual;
-                
                 $this->cart[$key]['subtotal'] = $subtotal;
                 $this->cart[$key]['harga_satuan'] = $barang->harga_jual;
-                $this->cart[$key]['bonus'] = $bonus;
+                // Bonus diinput manual, tidak dihitung otomatis
             } else {
                 $this->cart[$key]['subtotal'] = $this->cart[$key]['jumlah'] * $this->cart[$key]['harga_satuan'];
             }
@@ -271,17 +245,7 @@ class PointOfSale extends Component
             $subtotal += $sisa * $barang->harga_jual;
             $this->cart[$index]['subtotal'] = $subtotal;
             $this->cart[$index]['harga_satuan'] = $barang->harga_jual;
-            
-            // Hitung bonus berdasarkan qty
-            $bonus = 0;
-            if ($qty >= 600) {
-                $bonus = floor($qty / 600) * 30;
-            } elseif ($qty >= 100) {
-                $bonus = floor($qty / 100) * 5;
-            } elseif ($qty >= 20) {
-                $bonus = floor($qty / 20) * 1;
-            }
-            $this->cart[$index]['bonus'] = $bonus;
+            // Bonus diinput manual, tidak berubah otomatis saat qty berubah
         } else {
             $this->cart[$index]['subtotal'] = $qty * $this->cart[$index]['harga_satuan'];
         }
@@ -299,7 +263,31 @@ class PointOfSale extends Component
         $this->cart = [];
         $this->pelanggan_id = null;
         $this->bayar = '0';
-        $this->diskon = '0';
+        $this->diskon = '';
+    }
+
+    public function updateBonus(int $index, $bonus): void
+    {
+        $bonus = max(0, (int) $bonus);
+        if (!isset($this->cart[$index])) return;
+        
+        // Cek stok untuk memastikan bonus tidak melebihi stok yang tersedia
+        $stok = StokBarang::where('barang_master_id', $this->cart[$index]['barang_id'])
+            ->where('gudang_id', $this->gudang_id)
+            ->first();
+        $stokJumlah = $stok ? $stok->jumlah : 0;
+        
+        // Total yang dikeluarkan dari stok = jumlah + bonus
+        $totalDiperlukan = $this->cart[$index]['jumlah'] + $bonus;
+        if ($totalDiperlukan > $stokJumlah) {
+            $this->dispatch('show-alert', [
+                'type' => 'error',
+                'message' => 'Stok tidak mencukupi untuk bonus! Sisa stok: ' . $stokJumlah
+            ]);
+            return;
+        }
+        
+        $this->cart[$index]['bonus'] = $bonus;
     }
 
     public function getSubtotalProperty(): float
@@ -504,11 +492,10 @@ class PointOfSale extends Component
             ]);
 
             // Buka halaman print invoice untuk transaksi termin
-            if ($this->termin !== '0') {
-                $this->dispatch('open-print-invoice', [
-                    'url' => route('penjualan.print', $penjualan->id)
-                ]);
-            }
+            // Buka halaman print invoice untuk semua transaksi
+            $this->dispatch('open-print-invoice', [
+                'url' => route('penjualan.print', $penjualan->id)
+            ]);
 
         } catch (\Exception $e) {
             $this->dispatch('show-alert', [
