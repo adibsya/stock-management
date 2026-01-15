@@ -355,6 +355,12 @@ class PointOfSale extends Component
         }
 
         try {
+                    \Log::debug('DEBUG: PointOfSale masuk fungsi transaksi', [
+                        'user_id' => Auth::id(),
+                        'cart' => $this->cart,
+                        'termin' => $this->termin,
+                        'gudang_id' => $this->gudang_id,
+                    ]);
             $transaksiService = app(TransaksiService::class);
             $user = Auth::user();
 
@@ -378,6 +384,16 @@ class PointOfSale extends Component
                 $jatuh_tempo = $this->termins[0]['tanggal_jatuh_tempo'];
             }
 
+            \Log::debug('DEBUG: PointOfSale akan panggil simpanPenjualan', [
+                'user_id' => $user->id,
+                'pelanggan_id' => $this->pelanggan_id,
+                'gudang_id' => $this->gudang_id,
+                'items' => $items,
+                'mode_termin' => $mode_termin,
+                'jatuh_tempo' => $jatuh_tempo,
+                'status' => $status,
+            ]);
+
             $penjualan = $transaksiService->simpanPenjualan([
                 'user_id' => $user->id,
                 'pelanggan_id' => $this->pelanggan_id,
@@ -386,6 +402,10 @@ class PointOfSale extends Component
                 'mode_termin' => $mode_termin,
                 'jatuh_tempo' => $jatuh_tempo,
                 'status' => $status,
+            ]);
+
+            \Log::debug('DEBUG: PointOfSale selesai panggil simpanPenjualan', [
+                'penjualan' => $penjualan
             ]);
 
             // Simpan termin bertahap jika ada

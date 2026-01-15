@@ -19,7 +19,7 @@
         <aside class="sidebar flex flex-col">
             <!-- Brand -->
             <div class="sidebar-brand flex-shrink-0 flex flex-col items-center mt-4">
-                <img src="{{ asset('logo.png') }}" alt="Logo" class="w-24 h-10" style="margin-top:-12px;">
+                <img src="{{ asset('logo.png') }}" alt="Logo" class="w-32 h-10" style="margin-top:-12px;">
                 <span class="block text-xs text-gray-400 -mt-0.5">Stock & POS</span>
             </div>
             
@@ -54,6 +54,19 @@
                 <div class="sidebar-section">
                     <p class="sidebar-section-title">Master Data</p>
                 </div>
+
+                <a href="{{ route('pos-master-data.index') }}"
+                    class="sidebar-link {{ request()->routeIs('pos-master-data.*') ? 'active' : '' }}">
+
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M3 3h18M3 7h18M3 11h18" />
+                    </svg>
+
+                    <span>Pos Master Data</span>
+                </a>
 
                 <a href="{{ route('barang.index') }}" class="sidebar-link {{ request()->routeIs('barang.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +138,17 @@
                 @endif
 
                 <div class="sidebar-section">
+                    <p class="sidebar-section-title">Keuangan</p>
+                </div>
+
+                <a href="{{ route('jurnal.index') }}" class="sidebar-link {{ request()->routeIs('jurnal.index') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"></path>
+                    </svg>
+                    Jurnal
+                </a>
+
+                <div class="sidebar-section">
                     <p class="sidebar-section-title">Laporan</p>
                 </div>
 
@@ -135,20 +159,24 @@
                     Laba Rugi
                 </a>
 
-                <!-- <a href="{{ route('mutasi-stok.index') }}" class="sidebar-link {{ request()->routeIs('mutasi-stok.*') ? 'active' : '' }}">
+                <a href="{{ route('neraca.index') }}" class="sidebar-link {{ request()->routeIs('neraca.index') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v16m0 0h16m-16 0l16-16" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h18M3 7h18M3 11h18M3 15h18M3 19h18"></path>
                     </svg>
-                    Mutasi Stok
-                </a>  -->
+                    Neraca
+                </a>
             </nav>
 
             <!-- User Menu (Bottom) -->
             <div class="flex-shrink-0 p-4 border-t border-gray-100 bg-white mt-auto">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0 cursor-pointer" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
-                        {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
-                    </div>
+                    @if(auth()->user()->foto)
+                        <img src="{{ asset('storage/' . auth()->user()->foto) }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0 cursor-pointer border-2 border-sky-500" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
+                    @else
+                        <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0 cursor-pointer" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                        </div>
+                    @endif
                     <div class="flex-1 min-w-0 cursor-pointer" onclick="window.location='{{ route('profil') }}'" title="Lihat Profil">
                         <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
                         <p class="text-xs text-gray-500 truncate">{{ auth()->user()->role_label }}</p>

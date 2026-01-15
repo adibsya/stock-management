@@ -89,7 +89,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] - 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">-</button>
-                            <input type="number" min="1" :max="$item['stok']" class="w-14 text-center text-lg font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ $item['jumlah'] }}"
+                            <input type="number" min="1" max="{{ $item['stok'] }}" class="w-14 text-center text-lg font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ $item['jumlah'] }}"
                                 wire:change="updateQty({{ $index }}, $event.target.value)"
                                 wire:keydown.enter="updateQty({{ $index }}, $event.target.value)"
                                 >
@@ -202,6 +202,15 @@
 
             <!-- Actions -->
             <div class="mt-4 flex gap-3">
+                        <!-- DEBUG OUTPUT -->
+                        <div style="background:#ffeedd; color:#222; padding:8px; margin-bottom:8px; font-size:12px; border:1px solid #e0cfcf;">
+                            <strong>DEBUG:</strong><br>
+                            termin: {{ $termin }}<br>
+                            pelanggan_id: {{ $pelanggan_id }}<br>
+                            gudang_id: {{ $gudang_id }}<br>
+                            cart: <pre>{{ json_encode($cart, JSON_PRETTY_PRINT) }}</pre>
+                            termins: <pre>{{ json_encode($termins, JSON_PRETTY_PRINT) }}</pre>
+                        </div>
                 <button wire:click="clearCart" class="btn-secondary flex-1">
                     Batal
                 </button>

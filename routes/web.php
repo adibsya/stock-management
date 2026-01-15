@@ -18,6 +18,7 @@ use App\Http\Controllers\PosController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BarangMasterController;
+use App\Livewire\PosMasterIndex;
 
 
 // Auth Routes
@@ -35,6 +36,10 @@ Route::middleware('auth')->group(function () {
     // Dashboard - Semua role bisa akses
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Laporan Neraca
+        Route::get('/neraca', function () {
+            return view('neraca.index');
+        })->name('neraca.index');
 
     // Superadmin Panel - Multi Gudang & Manajemen Akun
     Route::middleware('role:super_admin')->group(function () {
@@ -70,6 +75,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/{barangMaster}/edit', [App\Http\Controllers\BarangMasterController::class, 'edit'])->name('edit');
         });
     });
+    
+    Route::put('/profil/password', [\App\Http\Controllers\ProfilController::class, 'updatePassword'])
+    ->name('profil.password.update');
 
     // Stok Barang (per Gudang)
     Route::prefix('stok-barang')->name('stok-barang.')->group(function () {
@@ -85,6 +93,8 @@ Route::middleware('auth')->group(function () {
     // Kasir pembayaran termin penjualan (Kasir Form)
     Route::get('/penjualan-termin/kasir/{penjualan}', App\Livewire\PenjualanKasirForm::class)->name('penjualan-termin.kasir');
 
+        // Jurnal - Tabel Jurnal
+        Route::get('/jurnal', App\Livewire\JurnalTable::class)->name('jurnal.index');
     // Master Data - Pelanggan
     Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
         Route::get('/', [PelangganController::class, 'index'])->name('index');
@@ -167,6 +177,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/penjualan-termin', App\Livewire\PenjualanTerminTable::class)->name('penjualan-termin.index');
 
     Route::resource('barang-master', BarangMasterController::class);
+
+    // Master Data - Pos Master Data
+    Route::prefix('master')->name('pos-master-data.')->group(function () {
+        Route::get('/pos', PosMasterIndex::class)->name('index');
+    });
+
+
 
     Route::get('/profil', function () {
         return view('profil');

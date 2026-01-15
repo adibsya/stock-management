@@ -8,10 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Penjualan extends Model
 {
-    public function pembayaranPenjualan()
-    {
-        return $this->hasMany(\App\Models\PembayaranPenjualan::class, 'penjualan_id');
-    }
     protected $table = 'penjualan';
 
     protected $fillable = [
@@ -24,102 +20,95 @@ class Penjualan extends Model
         'diskon_transaksi',
         'pajak',
         'total_bayar',
-        'metode_pembayaran',
         'mode_termin',
         'jatuh_tempo',
         'status',
     ];
-    /**
-     * Get gudang for this penjualan
-     */
-    public function gudang(): BelongsTo
-    {
-        return $this->belongsTo(Gudang::class, 'gudang_id');
-    }
 
     protected $casts = [
         'tanggal' => 'date',
+        'jatuh_tempo' => 'date',
         'total_kotor' => 'decimal:2',
         'diskon_transaksi' => 'decimal:2',
         'pajak' => 'decimal:2',
         'total_bayar' => 'decimal:2',
     ];
 
-    /**
-     * Get pelanggan for this penjualan
-     */
-    public function pelanggan(): BelongsTo
+    /* ================= RELATION ================= */
+
+    public function pembayaranPenjualan(): HasMany
     {
-        return $this->belongsTo(Pelanggan::class, 'pelanggan_id');
+        return $this->hasMany(PembayaranPenjualan::class, 'penjualan_id');
     }
 
-    /**
-     * Get user (kasir) for this penjualan
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * Get kasir (alias for user)
-     */
-    public function kasir(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * Get all detail penjualan
-     */
     public function detailPenjualan(): HasMany
     {
         return $this->hasMany(DetailPenjualan::class, 'penjualan_id');
     }
 
-    /**
-     * Alias for detailPenjualan
-     */
     public function items(): HasMany
     {
         return $this->detailPenjualan();
     }
 
-    /**
-     * Check if penjualan is completed
-     */
-    public function isSelesai(): bool
+    public function pelanggan(): BelongsTo
     {
-        return $this->status === 'selesai';
+        return $this->belongsTo(Pelanggan::class);
     }
 
-    /**
-     * Check if penjualan is draft
-     */
-    public function isDraft(): bool
+    public function gudang(): BelongsTo
     {
-        return $this->status === 'draft';
+        return $this->belongsTo(Gudang::class);
     }
 
-    /**
-     * Generate unique no faktur
-     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function kasir(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /* ================= HELPER ================= */
+
+    public function getTotalDibayarAttribute(): float
+    {
+        return (float) $this->pembayaranPenjualan()->sum('jumlah_bayar');
+    }
+
+    public function getSisaPiutangAttribute(): float
+    {
+        return max(0, $this->total_bayar - $this->total_dibayar);
+    }
+
+    public function isLunas(): bool
+    {
+        return $this->sisa_piutang <= 0;
+    }
+
+    public function updateStatus(): void
+    {
+        $this->status = $this->isLunas() ? 'lunas' : 'belum_lunas';
+        $this->save();
+    }
+
+    /* ================= NO FAKTUR ================= */
+
     public static function generateNoFaktur(): string
     {
         $today = now()->format('Ymd');
         $prefix = "INV-{$today}-";
-        
-        $lastInvoice = static::where('no_faktur', 'LIKE', $prefix . '%')
+
+        $last = static::where('no_faktur', 'like', $prefix.'%')
             ->orderBy('no_faktur', 'desc')
             ->first();
 
-        if ($lastInvoice) {
-            $lastNumber = (int) substr($lastInvoice->no_faktur, -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
+        $number = $last
+            ? str_pad(((int) substr($last->no_faktur, -4)) + 1, 4, '0', STR_PAD_LEFT)
+            : '0001';
 
-        return $prefix . $newNumber;
+        return $prefix.$number;
     }
 }

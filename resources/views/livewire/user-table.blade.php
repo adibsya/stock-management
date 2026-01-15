@@ -66,14 +66,18 @@
                 <tbody>
                 @forelse($users as $user)
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <!-- Nama -->
+                        <!-- Nama & Foto -->
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <span class="text-blue-600 font-semibold text-sm">
-                                        {{ strtoupper(substr($user->name, 0, 2)) }}
-                                    </span>
-                                </div>
+                                @if($user->foto)
+                                    <img src="{{ asset('storage/' . $user->foto) }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-blue-400 shadow-sm">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-blue-600 font-semibold text-sm">
+                                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $user->name }}</div>
                                     @if($user->id === auth()->id())

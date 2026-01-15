@@ -9,6 +9,7 @@ use App\Models\Pembelian;
 use App\Models\Pengeluaran;
 use App\Models\Penjualan;
 use App\Models\RiwayatStok;
+use App\Models\PosMasterData;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -22,110 +23,146 @@ class TransaksiService
      * @throws \Exception
      */
     public function simpanPenjualan(array $data): Penjualan
-    {
-        // Validasi stok terlebih dahulu sebelum memproses transaksi
+{
+    \Log::debug('MASUK simpanPenjualan');
+
+    if (empty($data['items']) || !is_array($data['items'])) {
+        throw new \Exception('Item penjualan kosong');
+    }
+
+    return DB::transaction(function () use ($data) {
+
+        // =========================
+        // 1. VALIDASI STOK
+        // =========================
         foreach ($data['items'] as $item) {
             $bonus = $item['bonus'] ?? 0;
-            $totalDibutuhkan = $item['jumlah'] + $bonus;
-            
+            $totalKeluar = $item['jumlah'] + $bonus;
+
             $stok = \App\Models\StokBarang::where('barang_master_id', $item['barang_id'])
-                ->where('gudang_id', $item['gudang_id'] ?? $data['gudang_id'])
+                ->where('gudang_id', $data['gudang_id'])
                 ->first();
-            
-            $stokTersedia = $stok ? $stok->jumlah : 0;
-            
-            if ($stokTersedia < $totalDibutuhkan) {
-                $barang = BarangMaster::find($item['barang_id']);
-                throw new \Exception(
-                    "Stok tidak mencukupi untuk {$barang->nama_barang}! " .
-                    "Dibutuhkan: {$totalDibutuhkan} (termasuk bonus {$bonus}), " .
-                    "Tersedia: {$stokTersedia}"
-                );
+
+            if (!$stok || $stok->jumlah < $totalKeluar) {
+                throw new \Exception('Stok tidak mencukupi');
             }
         }
 
-        return DB::transaction(function () use ($data) {
-            // Generate no faktur jika belum ada
-            $noFaktur = $data['no_faktur'] ?? Penjualan::generateNoFaktur();
+        // =========================
+        // 2. HITUNG TOTAL
+        // =========================
+        $totalKotor = collect($data['items'])->sum(function ($i) {
+            return $i['subtotal'] ?? ($i['jumlah'] * $i['harga_satuan']);
+        });
 
-            // Hitung total kotor dari items
-            $totalKotor = 0;
-            foreach ($data['items'] as $item) {
-                // Gunakan subtotal jika tersedia (untuk bundling/diskon), atau hitung manual
-                $subtotal = $item['subtotal'] ?? ($item['jumlah'] * $item['harga_satuan']);
-                $totalKotor += $subtotal;
-            }
+        $diskon = $data['diskon_transaksi'] ?? 0;
+        $pajak = $data['pajak'] ?? 0;
+        $totalBayar = ($totalKotor - $diskon) + $pajak;
 
-            // Hitung pajak dan total bayar
-            $diskonTransaksi = $data['diskon_transaksi'] ?? 0;
-            $pajak = $data['pajak'] ?? 0;
-            $totalBayar = ($totalKotor - $diskonTransaksi) + $pajak;
+        // =========================
+        // 3. SIMPAN PENJUALAN
+        // =========================
+        $penjualan = Penjualan::create([
+            'no_faktur' => $data['no_faktur'] ?? Penjualan::generateNoFaktur(),
+            'tanggal' => $data['tanggal'] ?? now(),
+            'pelanggan_id' => $data['pelanggan_id'] ?? null,
+            'user_id' => $data['user_id'],
+            'gudang_id' => $data['gudang_id'],
+            'total_kotor' => $totalKotor,
+            'diskon_transaksi' => $diskon,
+            'pajak' => $pajak,
+            'total_bayar' => $totalBayar,
+            'mode_termin' => $data['mode_termin'] ?? 'cash',
+            'status' => 'selesai',
+        ]);
 
-            // Simpan penjualan header (wajib ada gudang_id)
-            $penjualan = Penjualan::create([
-                'no_faktur' => $noFaktur,
-                'tanggal' => $data['tanggal'] ?? now(),
-                'pelanggan_id' => $data['pelanggan_id'] ?? null,
-                'user_id' => $data['user_id'],
-                'gudang_id' => $data['gudang_id'] ?? null,
-                'total_kotor' => $totalKotor,
-                'diskon_transaksi' => $diskonTransaksi,
-                'pajak' => $pajak,
-                'total_bayar' => $totalBayar,
-                'metode_pembayaran' => $data['metode_pembayaran'] ?? 'tunai',
-                'mode_termin' => $data['mode_termin'] ?? 'cash',
-                'jatuh_tempo' => $data['jatuh_tempo'] ?? null,
-                'status' => $data['status'] ?? 'selesai',
+        // =========================
+        // 4. DETAIL + STOK + KARTU
+        // =========================
+        $hpp = 0;
+
+        foreach ($data['items'] as $item) {
+
+            $barang = BarangMaster::findOrFail($item['barang_id']);
+            $bonus = $item['bonus'] ?? 0;
+            $totalKeluar = $item['jumlah'] + $bonus;
+
+            DetailPenjualan::create([
+                'penjualan_id' => $penjualan->id,
+                'barang_id' => $barang->id,
+                'gudang_id' => $penjualan->gudang_id,
+                'jumlah' => $item['jumlah'],
+                'bonus' => $bonus,
+                'harga_satuan' => $item['harga_satuan'],
+                'subtotal' => $item['subtotal'] ?? ($item['jumlah'] * $item['harga_satuan']),
             ]);
 
-            // Simpan detail penjualan dan update stok
-            foreach ($data['items'] as $item) {
-                // Gunakan subtotal jika tersedia (untuk bundling/diskon), atau hitung manual
-                $subtotal = $item['subtotal'] ?? ($item['jumlah'] * $item['harga_satuan']);
-                $bonus = $item['bonus'] ?? 0;
+            // stok
+            $stok = \App\Models\StokBarang::where('barang_master_id', $barang->id)
+                ->where('gudang_id', $penjualan->gudang_id)
+                ->first();
 
-                // Simpan detail penjualan (ikut gudang_id dari header atau item)
-                DetailPenjualan::create([
-                    'penjualan_id' => $penjualan->id,
-                    'barang_id' => $item['barang_id'],
-                    'gudang_id' => $item['gudang_id'] ?? $penjualan->gudang_id,
-                    'jumlah' => $item['jumlah'],
-                    'bonus' => $bonus,
-                    'harga_satuan' => $item['harga_satuan'],
-                    'subtotal' => $subtotal,
-                ]);
+            $stok->decrement('jumlah', $totalKeluar);
 
-                // Update stok barang (kurangi di gudang terkait)
-                $barang = BarangMaster::where('id', $item['barang_id'])->firstOrFail();
-                // Update stok barang di tabel stok_barang
-                $stok = \App\Models\StokBarang::where('barang_master_id', $item['barang_id'])
-                    ->where('gudang_id', $item['gudang_id'] ?? $penjualan->gudang_id)
-                    ->first();
-                $stokSebelum = $stok ? $stok->jumlah : 0;
-                
-                // Total barang keluar = jumlah beli + bonus
-                $totalKeluar = $item['jumlah'] + $bonus;
-                
-                if ($stok) {
-                    $stok->jumlah -= $totalKeluar;
-                    $stok->save();
-                }
+            RiwayatStok::create([
+                'tanggal' => $penjualan->tanggal,
+                'barang_id' => $barang->id,
+                'jenis_transaksi' => 'penjualan',
+                'jumlah_masuk' => 0,
+                'jumlah_keluar' => $totalKeluar,
+                'sisa_stok' => $stok->jumlah,
+                'referensi_id' => 'PNJ-' . $penjualan->id,
+            ]);
 
-                // Catat ke riwayat stok (kartu stok)
-                RiwayatStok::create([
-                    'tanggal' => $penjualan->tanggal,
-                    'barang_id' => $item['barang_id'],
-                    'jenis_transaksi' => 'penjualan',
-                    'jumlah_masuk' => 0,
-                    'jumlah_keluar' => $totalKeluar,
-                    'sisa_stok' => $stok ? (int)$stok->jumlah : 0,
-                    'referensi_id' => 'PNJ-' . $penjualan->id,
-                ]);
-            }
+            // HPP
+            $hpp += $totalKeluar * $barang->harga_beli;
+        }
 
-            return $penjualan->load('detailPenjualan.barang');
-        });
-    }
+        // =========================
+        // 5. JURNAL PENJUALAN
+        // =========================
+        $akunPendapatan = PosMasterData::where('kode', '4-01-01')->first();
+        $akunKas = PosMasterData::where('kode', '1-01-01')->first();
+        $akunPiutang = PosMasterData::where('kode', '1-01-02')->first();
+
+        if ($penjualan->mode_termin === 'termin') {
+            $debitAkun = $akunPiutang;
+        } else {
+            $debitAkun = $akunKas;
+        }
+
+        app(\App\Services\JurnalService::class)->create(
+            $penjualan->tanggal,
+            'Penjualan ' . $penjualan->no_faktur,
+            'penjualan',
+            $penjualan->id,
+            [
+                ['coa_id' => $debitAkun->id, 'debit' => $totalBayar],
+                ['coa_id' => $akunPendapatan->id, 'kredit' => $totalBayar],
+            ]
+        );
+
+        // =========================
+        // 6. JURNAL HPP
+        // =========================
+        $akunHpp = PosMasterData::where('kode', '5-01-01')->first();
+        $akunPersediaan = PosMasterData::where('kode', '1-01-04')->first();
+
+        app(\App\Services\JurnalService::class)->create(
+            $penjualan->tanggal,
+            'HPP Penjualan ' . $penjualan->no_faktur,
+            'penjualan',
+            $penjualan->id,
+            [
+                ['coa_id' => $akunHpp->id, 'debit' => $hpp],
+                ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
+            ]
+        );
+
+        return $penjualan->load('detailPenjualan.barang');
+    });
+}
+
 
     /**
      * Simpan transaksi pembelian/restock dengan detail items
@@ -136,6 +173,7 @@ class TransaksiService
      */
     public function simpanPembelian(array $data): Pembelian
     {
+        \Log::debug('TransaksiService::simpanPembelian dipanggil', $data);
         return DB::transaction(function () use ($data) {
             // Hitung total biaya dari items
             $totalBiaya = 0;
@@ -204,6 +242,80 @@ class TransaksiService
                 ]);
             }
             
+            // JURNAL OTOMATIS: Pembelian
+            if (($data['mode_termin'] ?? 'cash') === 'termin') {
+                // Pembelian Kredit (Termin): Persediaan & Hutang Usaha
+                $hutang = \App\Models\PosMasterData::where('kode', '2-01-01')->where('level', 2)->first(); // Hutang Usaha
+                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                \Log::debug('Cek jurnal pembelian termin', [
+                    'hutang' => $hutang,
+                    'persediaan' => $persediaan,
+                    'pembelian_id' => $pembelian->id,
+                    'total_biaya' => $pembelian->total_biaya,
+                ]);
+                if ($hutang && $persediaan) {
+                    \Log::debug('Memanggil JurnalService::create (pembelian termin)', [
+                        'tanggal' => $pembelian->tanggal,
+                        'no_faktur' => $pembelian->no_faktur_supplier,
+                        'pembelian_id' => $pembelian->id,
+                        'hutang_id' => $hutang->id,
+                        'persediaan_id' => $persediaan->id,
+                        'total_biaya' => $pembelian->total_biaya,
+                    ]);
+                    \App\Services\JurnalService::create(
+                        $pembelian->tanggal,
+                        'Pembelian Termin ' . $pembelian->no_faktur_supplier,
+                        'pembelian',
+                        $pembelian->id,
+                        [
+                            ['coa_id' => $persediaan->id, 'debit' => $pembelian->total_biaya],
+                            ['coa_id' => $hutang->id, 'kredit' => $pembelian->total_biaya],
+                        ]
+                    );
+                } else {
+                    \Log::error('GAGAL JURNAL PEMBELIAN TERMIN: COA tidak ditemukan', [
+                        'hutang' => $hutang,
+                        'persediaan' => $persediaan,
+                        'pembelian_id' => $pembelian->id,
+                    ]);
+                }
+            } else {
+                // Pembelian Tunai: Persediaan & Kas/Bank
+                $kasbank = \App\Models\PosMasterData::where('kode', '1-01-01')->where('level', 2)->first(); // Kas dan Bank
+                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                \Log::debug('Cek jurnal pembelian tunai', [
+                    'kasbank' => $kasbank,
+                    'persediaan' => $persediaan,
+                    'pembelian_id' => $pembelian->id,
+                    'total_biaya' => $pembelian->total_biaya,
+                ]);
+                if ($kasbank && $persediaan) {
+                    \Log::debug('Memanggil JurnalService::create (pembelian tunai)', [
+                        'tanggal' => $pembelian->tanggal,
+                        'no_faktur' => $pembelian->no_faktur_supplier,
+                        'pembelian_id' => $pembelian->id,
+                        'kasbank_id' => $kasbank->id,
+                        'persediaan_id' => $persediaan->id,
+                        'total_biaya' => $pembelian->total_biaya,
+                    ]);
+                    \App\Services\JurnalService::create(
+                        $pembelian->tanggal,
+                        'Pembelian Tunai ' . $pembelian->no_faktur_supplier,
+                        'pembelian',
+                        $pembelian->id,
+                        [
+                            ['coa_id' => $persediaan->id, 'debit' => $pembelian->total_biaya],
+                            ['coa_id' => $kasbank->id, 'kredit' => $pembelian->total_biaya],
+                        ]
+                    );
+                } else {
+                    \Log::error('GAGAL JURNAL PEMBELIAN TUNAI: COA tidak ditemukan', [
+                        'kasbank' => $kasbank,
+                        'persediaan' => $persediaan,
+                        'pembelian_id' => $pembelian->id,
+                    ]);
+                }
+            }
             return $pembelian->load('detailPembelian.barang', 'pemasok');
         });
     }
@@ -490,7 +602,7 @@ class TransaksiService
      * Get ringkasan dashboard
      * 
      * @return array
-     */
+     */ 
     public function getDashboardSummary(): array
     {
         $today = now()->startOfDay();
