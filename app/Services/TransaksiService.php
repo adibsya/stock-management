@@ -432,9 +432,9 @@ class TransaksiService
      * Barang rusak tidak dikembalikan ke stok, customer ambil barang pengganti dari stok
      * 
      * @param array $data
-     * @return \App\Models\Retur
+     * @return array
      */
-    public function prosesReturPenjualan(array $data)
+    public function prosesReturPenjualan(array $data): array
     {
         // Cek stok terlebih dahulu sebelum membuat retur
         $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
@@ -512,8 +512,13 @@ class TransaksiService
             ]);
             
             // Kurangi stok karena barang dikembalikan ke supplier
-            $barang = Barang::findOrFail($data['barang_id']);
-            $barang->kurangiStok($data['jumlah']);
+            $barang = BarangMaster::findOrFail($data['barang_id']);
+            $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
+                ->where('gudang_id', $data['gudang_id'] ?? 1)
+                ->first();
+            if ($stok) {
+                $stok->decrement('jumlah', $data['jumlah']);
+            }
             
             // Catat ke riwayat stok
             RiwayatStok::create([
@@ -522,7 +527,7 @@ class TransaksiService
                 'jenis_transaksi' => 'retur_keluar',
                 'jumlah_masuk' => 0,
                 'jumlah_keluar' => $data['jumlah'],
-                'sisa_stok' => $barang->fresh()->stok,
+                'sisa_stok' => $stok ? $stok->jumlah : 0,
                 'referensi_id' => 'RTR-' . $retur->id,
             ]);
             
@@ -541,12 +546,15 @@ class TransaksiService
     public function stockOpname(int $barangId, int $stokFisik, ?string $keterangan = null): RiwayatStok
     {
         return DB::transaction(function () use ($barangId, $stokFisik, $keterangan) {
-            $barang = Barang::findOrFail($barangId);
-            $stokSistem = $barang->stok;
+            $barang = BarangMaster::findOrFail($barangId);
+            $stok = \App\Models\StokBarang::where('barang_master_id', $barangId)->first();
+            $stokSistem = $stok ? $stok->jumlah : 0;
             $selisih = $stokFisik - $stokSistem;
             
             // Update stok barang
-            $barang->update(['stok' => $stokFisik]);
+            if ($stok) {
+                $stok->update(['jumlah' => $stokFisik]);
+            }
             
             // Catat ke riwayat stok
             return RiwayatStok::create([
@@ -624,8 +632,8 @@ class TransaksiService
             'jumlah_transaksi_hari_ini' => Penjualan::where('status', 'selesai')
                 ->whereDate('tanggal', $today)
                 ->count(),
-            'barang_hampir_habis' => Barang::hampirHabis()->count(),
-            'barang_habis' => Barang::habis()->count(),
+            'barang_hampir_habis' => \App\Models\StokBarang::where('jumlah', '<=', 10)->where('jumlah', '>', 0)->count(),
+            'barang_habis' => \App\Models\StokBarang::where('jumlah', '<=', 0)->count(),
             'hutang_belum_lunas' => Pembelian::belumLunas()->sum('total_biaya'),
             'hutang_jatuh_tempo' => Pembelian::jatuhTempo()->sum('total_biaya'),
         ];

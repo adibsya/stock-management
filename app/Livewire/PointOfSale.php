@@ -144,7 +144,6 @@ class PointOfSale extends Component
                 $sisa -= $bundleCount * $bundleQty;
             }
             $subtotal += $sisa * $harga_jual;
-            $harga_jual = $harga_jual; // harga satuan untuk sisa
         }
         // Cari item di cart secara manual untuk memastikan index yang tepat
         $key = null;
@@ -196,7 +195,6 @@ class PointOfSale extends Component
                 'jumlah' => 1,
                 'subtotal' => $subtotal,
                 'stok' => $stok->jumlah,
-                'satuan' => $barang->satuan,
                 'bonus' => $isNukleer ? $bonus : 0,
             ];
         }
