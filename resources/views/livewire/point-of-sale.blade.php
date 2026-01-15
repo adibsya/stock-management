@@ -31,15 +31,50 @@
 
         <!-- Product Grid -->
         <div class="card-compact flex-1 overflow-y-auto relative">
-            <!-- Loading Overlay -->
-            <div wire:loading wire:target="gudang_id, searchBarang" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl">
-                <div class="relative">
-                    <div class="w-16 h-16 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
-                    <svg class="w-8 h-8 text-sky-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                    </svg>
+            <!-- Loading Overlay - Premium Design -->
+            <div wire:loading wire:target="gudang_id, searchBarang" class="absolute inset-0 z-20 flex items-center justify-center">
+                <!-- Backdrop with gradient -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/95 via-sky-50/90 to-blue-50/95 backdrop-blur-md rounded-xl"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10 flex flex-col items-center">
+                    <!-- Animated Logo Container -->
+                    <div class="relative">
+                        <!-- Outer rotating ring -->
+                        <div class="w-24 h-24 rounded-full border-4 border-sky-100 border-t-sky-500 border-r-sky-400 animate-spin"></div>
+                        
+                        <!-- Inner pulsing circle -->
+                        <div class="absolute inset-2 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full animate-pulse flex items-center justify-center shadow-lg shadow-sky-200">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                            </svg>
+                        </div>
+                        
+                        <!-- Floating particles -->
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                        <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s;"></div>
+                        <div class="absolute top-1/2 -right-2 w-2 h-2 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.5s;"></div>
+                    </div>
+                    
+                    <!-- Text with animated dots -->
+                    <div class="mt-6 text-center">
+                        <p class="text-lg font-semibold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                            Memuat Produk
+                        </p>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <span class="w-2 h-2 bg-sky-500 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
+                            <span class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
+                            <span class="w-2 h-2 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Skeleton Preview -->
+                    <div class="mt-6 grid grid-cols-3 gap-3 opacity-50">
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse"></div>
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse" style="animation-delay: 0.1s;"></div>
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse" style="animation-delay: 0.2s;"></div>
+                    </div>
                 </div>
-                <p class="mt-4 text-sky-600 font-medium animate-pulse">Memuat data barang...</p>
             </div>
 
             @if(!$gudang_id)
