@@ -309,12 +309,13 @@ class PointOfSale extends Component
 
     public function getDiskonProperty(): float
     {
-        return (float) $this->diskon;
+        $diskon = trim($this->diskon);
+        return $diskon === '' ? 0.0 : (float) $diskon;
     }
 
     public function getTotalProperty(): float
     {
-        return $this->subtotal - $this->diskon;
+        return $this->subtotal - $this->getDiskonProperty();
     }
 
     public function getKembalianProperty(): float

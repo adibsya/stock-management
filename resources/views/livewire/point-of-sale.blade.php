@@ -1,4 +1,4 @@
-<div class="flex gap-6 h-[calc(100vh-180px)] overflow-hidden" wire:init="$set('isLoading', false)">
+<div class="flex gap-6 h-[calc(100vh-180px)] overflow-hidden">
     <!-- Left: Product List -->
     <div class="w-2/3 flex flex-col h-full">
         <!-- Search & Gudang Header -->
@@ -282,10 +282,11 @@
                         <span>Subtotal ({{ count($cart) }} item)</span>
                         <span>Rp {{ number_format($this->subtotal, 0, ',', '.') }}</span>
                     </div>
-                    @if((float)$this->diskon > 0)
+                    @php $diskonValue = $this->getDiskonProperty(); @endphp
+                    @if($diskonValue > 0)
                     <div class="flex justify-between text-sm text-red-400">
                         <span>Diskon</span>
-                        <span>- Rp {{ number_format($this->diskon, 0, ',', '.') }}</span>
+                        <span>- Rp {{ number_format($diskonValue, 0, ',', '.') }}</span>
                     </div>
                     @endif
                     <div class="flex justify-between text-xl font-bold pt-2 border-t border-gray-700">
