@@ -51,7 +51,7 @@
                     <p class="text-sm text-gray-400 mt-1">Klik dropdown gudang di atas untuk memulai</p>
                 </div>
             @else
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" wire:poll.5s>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     @forelse($barangs as $barang)
                         @php
                             $stok = $barang->stok->first();
@@ -134,7 +134,7 @@
                         </div>
                     </div>
                     @if(count($cart) > 0)
-                    <button wire:click="clearCart" class="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition" title="Kosongkan">
+                    <button onclick="confirm('Hapus semua item dari keranjang?') && @this.clearCart()" class="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition" title="Kosongkan">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -299,20 +299,27 @@
 
             <!-- Payment -->
 
-            <!-- Actions -->
-            <div class="mt-4 flex gap-3">
-                <button wire:click="clearCart" class="btn-secondary flex-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    Batal
-                </button>
-                <button wire:click="prosesTransaksi" class="btn-success flex-1 text-base py-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Bayar
-                </button>
+            <!-- Actions Footer -->
+            <div class="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
+                <div class="flex gap-3">
+                    <button onclick="confirm('Batalkan transaksi ini?') && @this.clearCart()" class="btn-secondary flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Batal
+                    </button>
+                    <button wire:click="prosesTransaksi" wire:loading.attr="disabled" class="btn-success flex-1 text-base py-3 disabled:opacity-50">
+                        <svg wire:loading.remove wire:target="prosesTransaksi" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <svg wire:loading wire:target="prosesTransaksi" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span wire:loading.remove wire:target="prosesTransaksi">Bayar</span>
+                        <span wire:loading wire:target="prosesTransaksi">Memproses...</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
