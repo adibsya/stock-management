@@ -117,6 +117,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/termin/{penjualan}', \App\Livewire\PenjualanTerminUpdate::class)->name('termin.update');
         Route::get('/{penjualan}', [PenjualanController::class, 'show'])->name('show');
         Route::get('/{penjualan}/print', [PenjualanController::class, 'print'])->name('print');
+        Route::get('/{penjualan}/surat-jalan', [PenjualanController::class, 'printSuratJalan'])->name('surat-jalan');
         Route::get('/termin/{pembayaran}/print', [PenjualanController::class, 'printTermin'])->name('termin.print');
     });
 

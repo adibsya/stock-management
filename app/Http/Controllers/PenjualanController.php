@@ -31,4 +31,10 @@ class PenjualanController extends Controller
         $pembayaran->load(['penjualan.pelanggan', 'penjualan.user', 'penjualan.gudang']);
         return view('penjualan.print-termin', compact('pembayaran'));
     }
+
+    public function printSuratJalan(Penjualan $penjualan): View
+    {
+        $penjualan->load(['pelanggan', 'detailPenjualan.barang']);
+        return view('penjualan.surat-jalan', compact('penjualan'));
+    }
 }
