@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Gudang;
+use App\Models\BarangMaster;
 use App\Models\Barang;
+use App\Models\StokBarang;
 use App\Models\Pelanggan;
 use App\Models\Pemasok;
 use App\Models\Pengaturan;
@@ -31,14 +33,29 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Create Admin User
+        // Create Gudang first
+        $gudangUtama = Gudang::updateOrCreate(
+            ['nama_gudang' => 'Gudang Utama'],
+            [
+                'lokasi' => 'Jl. Raya Utama No. 1, Surabaya',
+            ]
+        );
+
+        $gudangCabang = Gudang::updateOrCreate(
+            ['nama_gudang' => 'Gudang Cabang'],
+            [
+                'lokasi' => 'Jl. Raya Cabang No. 2, Surabaya',
+            ]
+        );
+
+        // Create Admin User with gudang_id
         User::updateOrCreate(
             ['email' => 'admin@ngarumi.com'],
             [
                 'name' => 'Administrator',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
-                'gudang_id' => 1, // Akan diupdate setelah Gudang Utama dibuat
+                'gudang_id' => $gudangUtama->id,
             ]
         );
 
@@ -49,28 +66,6 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Viewer',
                 'password' => Hash::make('password'),
                 'role' => 'viewer',
-            ]
-        );
-
-        // Create Gudang
-        $gudangUtama = Gudang::updateOrCreate(
-            ['nama_gudang' => 'Gudang Utama'],
-            [
-                'lokasi' => 'Jl. Raya Utama No. 1, Surabaya',
-            ]
-        );
-
-        // Update admin user dengan gudang_id yang benar
-        $admin = User::where('email', 'admin@ngarumi.com')->first();
-        if ($admin && $gudangUtama) {
-            $admin->gudang_id = $gudangUtama->id;
-            $admin->save();
-        }
-
-        $gudangCabang = Gudang::updateOrCreate(
-            ['nama_gudang' => 'Gudang Cabang'],
-            [
-                'lokasi' => 'Jl. Raya Cabang No. 2, Surabaya',
             ]
         );
 
@@ -110,8 +105,47 @@ class DatabaseSeeder extends Seeder
             ['kode_barang' => 'RKK-003', 'nama_barang' => 'NUKlerr 1 Karton', 'kategori' => 'Rokok', 'satuan' => 'karton', 'harga_beli' => 4800000, 'harga_jual' => 5100000, 'stok' => 5, 'stok_minimum' => 2, 'gudang_id' => $gudangUtama->id, 'keterangan' => 'Beli 1 karton bonus 3 slop'],
         ];
 
-        foreach ($barangList as $barang) {
-            Barang::updateOrCreate(['kode_barang' => $barang['kode_barang']], $barang);
+        foreach ($barangList as $data) {
+            // Buat Barang Master
+            $master = BarangMaster::updateOrCreate(
+                ['kode_barang' => $data['kode_barang']],
+                [
+                    'nama_barang' => $data['nama_barang'],
+                    'kategori' => $data['kategori'],
+                    'satuan' => $data['satuan'],
+                    'harga_beli' => $data['harga_beli'],
+                    'harga_jual' => $data['harga_jual'],
+                    'keterangan' => $data['keterangan'] ?? null,
+                ]
+            );
+
+            // Buat entri stok untuk gudang utama (tabel stok_barangs)
+            $stok = isset($data['stok']) ? $data['stok'] : 50;
+            StokBarang::updateOrCreate(
+                [
+                    'barang_master_id' => $master->id,
+                    'gudang_id' => $gudangUtama->id,
+                ],
+                [
+                    'jumlah' => $stok,
+                ]
+            );
+
+            // Buat entri barang untuk POS (tabel barang) 
+            Barang::updateOrCreate(
+                [
+                    'barang_master_id' => $master->id,
+                    'gudang_id' => $gudangUtama->id,
+                ],
+                [
+                    'pemasok_id' => null,
+                    'harga_beli' => $data['harga_beli'],
+                    'harga_jual' => $data['harga_jual'],
+                    'stok' => $stok,
+                    'stok_minimum' => $data['stok_minimum'] ?? 10,
+                    'keterangan' => $data['keterangan'] ?? null,
+                ]
+            );
         }
 
         // Create Pengaturan

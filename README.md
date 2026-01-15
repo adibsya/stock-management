@@ -1,59 +1,296 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📦 Stock Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem Manajemen Inventaris berbasis web yang powerful dan modern, dibangun dengan Laravel 12 dan Livewire 3. Aplikasi ini dirancang untuk membantu bisnis dalam mengelola stok barang, transaksi pembelian & penjualan, serta menghasilkan laporan keuangan secara real-time.
 
-## About Laravel
+## 🚀 Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 📊 Manajemen Inventaris
+- **Multi-Warehouse Management**: Kelola stok di beberapa gudang sekaligus
+- **Real-time Stock Tracking**: Pantau pergerakan stok secara real-time
+- **Barcode Support**: Integrasi sistem barcode untuk tracking barang
+- **Stock Alerts**: Notifikasi otomatis untuk stok menipis
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 💰 Sistem Penjualan & Pembelian
+- **Point of Sale (POS)**: Interface kasir yang intuitif dan responsif
+- **Sales Management**: Kelola transaksi penjualan dengan mudah
+- **Purchase Orders**: Sistem pembelian barang dari pemasok
+- **Payment Terms**: Dukungan pembayaran termin/cicilan
+- **Payment Tracking**: Pencatatan dan monitoring pembayaran
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👥 Manajemen Stakeholder
+- **Customer Management**: Database pelanggan lengkap
+- **Supplier Management**: Kelola data pemasok
+- **User Management**: Sistem pengguna dengan role & permissions
 
-## Learning Laravel
+### 📈 Laporan & Analitik
+- **Profit & Loss Report**: Laporan laba rugi detail
+- **Stock Reports**: Laporan persediaan barang
+- **Transaction History**: Riwayat semua transaksi
+- **Expense Tracking**: Pencatatan pengeluaran operasional
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🛠️ Teknologi yang Digunakan
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Backend
+- **Framework**: [Laravel 12](https://laravel.com) - PHP Framework modern dan elegant
+- **PHP Version**: ^8.2 - Menggunakan fitur PHP terbaru
+- **Livewire**: ^3.7 - Komponen reactive tanpa menulis JavaScript
+- **Database**: MySQL/PostgreSQL/SQLite (kompatibel dengan semua)
+- **Queue System**: Laravel Queue untuk background processing
+- **Logging**: Laravel Pail untuk real-time log monitoring
 
-## Laravel Sponsors
+### Frontend
+- **Build Tool**: [Vite](https://vitejs.dev) ^7.0.7 - Lightning-fast build tool
+- **CSS Framework**: [Tailwind CSS](https://tailwindcss.com) ^4.1.18 - Utility-first CSS framework
+- **JavaScript**: Vanilla JS dengan Alpine.js (via Livewire)
+- **Icons**: Tailwind Icons & Custom SVG
+- **HTTP Client**: Axios ^1.11.0
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Development Tools
+- **Package Manager**: Composer (Backend), NPM (Frontend)
+- **Code Quality**: Laravel Pint untuk code formatting
+- **Testing**: PHPUnit ^11.5.3
+- **Task Runner**: Concurrently untuk menjalankan multiple services
+- **Hot Module Replacement**: Vite HMR untuk development yang cepat
 
-### Premium Partners
+## ⚡ Optimasi & Performance
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 1. **Database Optimization**
+- Eager Loading untuk mencegah N+1 query problem
+- Database indexing pada kolom yang sering di-query
+- Query optimization dengan select statements yang efisien
 
-## Contributing
+### 2. **Frontend Performance**
+- **Vite Build System**: Build time yang sangat cepat
+- **Tailwind CSS Purging**: Hanya CSS yang digunakan yang di-bundle
+- **Lazy Loading**: Component Livewire di-load on-demand
+- **Asset Bundling**: Minifikasi CSS & JS di production
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. **Caching Strategy**
+- View caching untuk template Blade
+- Route caching untuk performa routing
+- Config caching untuk production deployment
+- Optimized autoloader untuk faster class loading
 
-## Code of Conduct
+### 4. **Code Organization**
+- Service Layer Pattern untuk business logic
+- Repository Pattern untuk data access
+- Component-based architecture dengan Livewire
+- DRY (Don't Repeat Yourself) principles
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. **Development Optimization**
+- Hot Module Replacement (HMR) dengan Vite
+- Excluded storage/framework/views dari file watching
+- Concurrent development servers untuk productivity
+- Automated setup scripts
 
-## Security Vulnerabilities
+## 📋 Persyaratan Sistem
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- PHP >= 8.2
+- Composer >= 2.0
+- Node.js >= 18.x & NPM
+- MySQL >= 5.7 / PostgreSQL >= 12 / SQLite >= 3.8
+- Web Server (Apache/Nginx)
 
-## License
+## 🔧 Instalasi & Setup
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/stock-management.git
+cd stock-management
+```
+
+### 2. Install Dependencies
+```bash
+# Install PHP dependencies
+composer install
+
+# Install Node dependencies
+npm install
+```
+
+### 3. Environment Configuration
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+### 4. Database Setup
+Edit file `.env` dan sesuaikan konfigurasi database:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=stock_management
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Jalankan migrasi dan seeder:
+```bash
+php artisan migrate --seed
+```
+
+### 5. Build Assets
+```bash
+# Development
+npm run dev
+
+# Production
+npm run build
+```
+
+### 6. Jalankan Aplikasi
+```bash
+# Single command untuk menjalankan semua services
+composer run dev
+
+# Atau manual:
+php artisan serve
+npm run dev
+```
+
+Aplikasi akan berjalan di `http://localhost:8000`
+
+## 🎯 Quick Setup (Automated)
+```bash
+composer run setup
+```
+Command ini akan otomatis:
+- Install semua dependencies
+- Copy .env file
+- Generate app key
+- Jalankan migrations
+- Build assets
+
+## 🧪 Testing
+```bash
+# Run all tests
+composer run test
+
+# Run specific test
+php artisan test --filter=YourTestName
+```
+
+## 📁 Struktur Proyek
+
+```
+stock-management/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/     # HTTP Controllers
+│   │   └── Middleware/      # Custom Middleware
+│   ├── Livewire/           # Livewire Components
+│   ├── Models/             # Eloquent Models
+│   └── Services/           # Business Logic Services
+├── database/
+│   ├── migrations/         # Database Migrations
+│   ├── seeders/           # Database Seeders
+│   └── factories/         # Model Factories
+├── resources/
+│   ├── css/               # Stylesheets
+│   ├── js/                # JavaScript Files
+│   └── views/             # Blade Templates
+│       ├── components/    # Blade Components
+│       ├── layouts/       # Layout Templates
+│       └── livewire/      # Livewire Views
+├── routes/
+│   ├── web.php           # Web Routes
+│   └── console.php       # Console Commands
+└── public/               # Public Assets
+```
+
+## 🔐 Fitur Keamanan
+
+- ✅ CSRF Protection
+- ✅ SQL Injection Prevention (Eloquent ORM)
+- ✅ XSS Protection
+- ✅ Password Hashing (Bcrypt)
+- ✅ Secure Session Management
+- ✅ Input Validation & Sanitization
+- ✅ Rate Limiting
+
+## 🎨 UI/UX Features
+
+- **Responsive Design**: Mobile-first approach dengan Tailwind CSS
+- **Real-time Updates**: Tanpa refresh halaman menggunakan Livewire
+- **Modern Interface**: UI yang clean dan intuitif
+- **Dark Mode Ready**: (Opsional, bisa diaktifkan)
+- **Fast Loading**: Optimasi untuk performa maksimal
+
+## 📝 Environment Variables
+
+Key environment variables yang perlu dikonfigurasi:
+
+```env
+APP_NAME="Stock Management"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=stock_management
+DB_USERNAME=root
+DB_PASSWORD=
+
+QUEUE_CONNECTION=database
+```
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+# Optimize untuk production
+composer install --optimize-autoloader --no-dev
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+npm run build
+```
+
+### Production Checklist
+- [ ] Set `APP_ENV=production`
+- [ ] Set `APP_DEBUG=false`
+- [ ] Configure proper database credentials
+- [ ] Set up queue worker
+- [ ] Configure web server (Nginx/Apache)
+- [ ] Set up SSL certificate
+- [ ] Configure backups
+- [ ] Set up monitoring
+
+## 🤝 Contributing
+
+Kontribusi selalu diterima! Silakan:
+
+1. Fork repository ini
+2. Buat branch fitur baru (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 License
+
+Proyek ini menggunakan lisensi MIT. Lihat file `LICENSE` untuk detail lengkap.
+
+## 👤 Author
+
+**Your Name**
+- GitHub: [@yourusername](https://github.com/yourusername)
+- Email: your.email@example.com
+
+## 🙏 Acknowledgments
+
+- [Laravel](https://laravel.com) - The PHP Framework
+- [Livewire](https://livewire.laravel.com) - A full-stack framework
+- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
+- [Vite](https://vitejs.dev) - Next generation frontend tooling
+
+---
+
+⭐ **Jika proyek ini membantu, berikan star di GitHub!**
+
+💡 **Butuh bantuan?** Buka [Issues](https://github.com/yourusername/stock-management/issues)

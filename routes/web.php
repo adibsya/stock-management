@@ -5,7 +5,6 @@ use App\Livewire\StokBarangForm;
 use App\Livewire\BarangMasterForm;
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GudangController;
 use App\Http\Controllers\LaporanController;
@@ -81,10 +80,10 @@ Route::middleware('auth')->group(function () {
 
     // Stok Barang (per Gudang)
     Route::prefix('stok-barang')->name('stok-barang.')->group(function () {
-        Route::get('/', [BarangController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\StokBarangTable::class)->name('index');
         Route::middleware('role:admin')->group(function () {
-            Route::get('/create', [BarangController::class, 'create'])->name('create');
-            Route::get('/{barang}/edit', [BarangController::class, 'edit'])->name('edit');
+            Route::get('/create', StokBarangForm::class)->name('create');
+            Route::get('/{barang}/edit', StokBarangForm::class)->name('edit');
         });
     });
 
@@ -125,8 +124,11 @@ Route::middleware('auth')->group(function () {
     // Transaksi - Penjualan
     Route::prefix('penjualan')->name('penjualan.')->group(function () {
         Route::get('/', [PenjualanController::class, 'index'])->name('index');
+        Route::get('/termin/{penjualan}', \App\Livewire\PenjualanTerminUpdate::class)->name('termin.update');
         Route::get('/{penjualan}', [PenjualanController::class, 'show'])->name('show');
         Route::get('/{penjualan}/print', [PenjualanController::class, 'print'])->name('print');
+        Route::get('/{penjualan}/surat-jalan', [PenjualanController::class, 'printSuratJalan'])->name('surat-jalan');
+        Route::get('/termin/{pembayaran}/print', [PenjualanController::class, 'printTermin'])->name('termin.print');
     });
 
     // Transaksi - Retur
@@ -153,7 +155,7 @@ Route::middleware('auth')->group(function () {
 
     // Transaksi - Pengeluaran
     Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
-        Route::get('/', App\Livewire\PengeluaranTable::class)->name('index');
+        Route::get('/', fn() => view('pengeluaran.index'))->name('index');
         Route::middleware('role:admin')->group(function () {
             Route::get('/create', App\Livewire\PengeluaranForm::class)->name('create');
             Route::get('/{pengeluaran}/edit', App\Livewire\PengeluaranForm::class)->name('edit');

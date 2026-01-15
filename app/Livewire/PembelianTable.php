@@ -19,6 +19,7 @@ class PembelianTable extends Component
     public string $sortBy = 'tanggal';
     public string $sortDirection = 'desc';
     public int $perPage = 10;
+    public string $kategoriProduk = '';
     protected $listeners = ['delete'];
 
     public string $gudangId = '';
@@ -28,6 +29,7 @@ class PembelianTable extends Component
         'startDate' => ['except' => ''],
         'endDate' => ['except' => ''],
         'gudangId' => ['except' => ''],
+        'kategoriProduk' => ['except' => ''],
     ];
 
     public function mount(): void
@@ -79,6 +81,11 @@ class PembelianTable extends Component
         $this->resetPage();
     }
 
+    public function updatingKategoriProduk()
+    {
+        $this->resetPage();
+    }
+
 
     public function render()
     {
@@ -104,6 +111,11 @@ class PembelianTable extends Component
             ->when($this->gudangId, function ($query) {
                 $query->where('gudang_id', $this->gudangId);
             })
+            ->when($this->kategoriProduk, function ($query) {
+                $query->whereHas('detailPembelian.barangmaster', function ($q) {
+                    $q->where('kategori', $this->kategoriProduk);
+                });
+            })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate($this->perPage);
 
@@ -111,7 +123,14 @@ class PembelianTable extends Component
             ->when($this->startDate, fn($q) => $q->whereDate('tanggal', '>=', $this->startDate))
             ->when($this->endDate, fn($q) => $q->whereDate('tanggal', '<=', $this->endDate))
             ->when($this->gudangId, fn($q) => $q->where('gudang_id', $this->gudangId))
+            ->when($this->kategoriProduk, function ($query) {
+                $query->whereHas('detailPembelian.barangmaster', function ($q) {
+                    $q->where('kategori', $this->kategoriProduk);
+                });
+            })
             ->sum('total_biaya');
+
+        $kategoris = \App\Models\BarangMaster::select('kategori')->distinct()->whereNotNull('kategori')->pluck('kategori');
 
         $user = Auth::user();
         $gudangs = [];
@@ -128,6 +147,7 @@ class PembelianTable extends Component
             'gudangs' => $gudangs,
             'gudangId' => $this->gudangId,
             'showGudangFilter' => $showGudangFilter,
+            'kategoris' => $kategoris,
         ]);
     }
 }

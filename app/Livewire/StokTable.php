@@ -14,6 +14,22 @@ class StokTable extends Component
     public $perPage = 15;
     public $search = '';
     public $gudangId = '';
+    public $statusStok = ''; // 'habis', 'sedikit', 'aman'
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingGudangId()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatusStok()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
@@ -29,6 +45,15 @@ class StokTable extends Component
 
         if ($this->gudangId) {
             $query->where('gudang_id', $this->gudangId);
+        }
+
+        // Filter status stok
+        if ($this->statusStok === 'habis') {
+            $query->where('jumlah', '<=', 0);
+        } elseif ($this->statusStok === 'sedikit') {
+            $query->where('jumlah', '>', 0)->where('jumlah', '<=', 10);
+        } elseif ($this->statusStok === 'aman') {
+            $query->where('jumlah', '>', 10);
         }
 
         // Superadmin/Viewer: tampilkan semua stok, Admin: hanya stok di gudang miliknya
@@ -54,3 +79,4 @@ class StokTable extends Component
         ]);
     }
 }
+

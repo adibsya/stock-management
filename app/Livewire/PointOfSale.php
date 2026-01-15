@@ -18,9 +18,16 @@ class PointOfSale extends Component
     public ?int $pelanggan_id = null;
     public string $termin = '0'; // '0' = tunai, '1' = termin sekali, '2' = termin bertahap
     public array $termins = [];
-    public int $jumlah_termin = 2;
+    public string $jumlah_termin = '2';
     public string $tanggal_mulai_termin = '';
     public ?int $gudang_id = null;
+    public string $diskon = '0';
+
+    public function updatedGudangId($value)
+    {
+        $this->cart = []; // Clear cart when gudang changes
+    }
+
     public function updatedTermin($value)
     {
         $this->setDefaultTermins();
@@ -146,8 +153,17 @@ class PointOfSale extends Component
             $subtotal += $sisa * $harga_jual;
             $harga_jual = $harga_jual; // harga satuan untuk sisa
         }
-        $key = array_search($barangMasterId, array_column($this->cart, 'barang_id'));
-        if ($key !== false) {
+        // Cari item di cart secara manual untuk memastikan index yang tepat
+        $key = null;
+        foreach ($this->cart as $index => $item) {
+            if ($item['barang_id'] == $barangMasterId) {
+                // Pastikan tipe data sama atau bandingkan secara loose
+                $key = $index;
+                break;
+            }
+        }
+
+        if ($key !== null) {
             if ($this->cart[$key]['jumlah'] >= $stok->jumlah) {
                 $this->dispatch('show-alert', [
                     'type' => 'error',
@@ -177,6 +193,7 @@ class PointOfSale extends Component
                     $sisa -= $bundleCount * $bundleQty;
                 }
                 $subtotal += $sisa * $barang->harga_jual;
+                
                 $this->cart[$key]['subtotal'] = $subtotal;
                 $this->cart[$key]['harga_satuan'] = $barang->harga_jual;
                 $this->cart[$key]['bonus'] = $bonus;
@@ -200,6 +217,7 @@ class PointOfSale extends Component
                 'barang_id' => $barang->id,
                 'kode_barang' => $barang->kode_barang,
                 'nama_barang' => $barang->nama_barang,
+                'satuan' => $barang->satuan,
                 'harga_satuan' => $harga_jual,
                 'jumlah' => 1,
                 'subtotal' => $subtotal,
@@ -209,10 +227,12 @@ class PointOfSale extends Component
             ];
         }
         $this->searchBarang = '';
+        $this->dispatch('notify', message: 'Berhasil ditambahkan ke keranjang!');
     }
 
-    public function updateQty(int $index, int $qty): void
+    public function updateQty(int $index, $qty): void
     {
+        $qty = (int) $qty;
         if (!isset($this->cart[$index])) return;
         if ($qty <= 0) {
             $this->removeFromCart($index);
@@ -279,6 +299,7 @@ class PointOfSale extends Component
         $this->cart = [];
         $this->pelanggan_id = null;
         $this->bayar = '0';
+        $this->diskon = '0';
     }
 
     public function getSubtotalProperty(): float
@@ -288,18 +309,66 @@ class PointOfSale extends Component
 
     public function getDiskonProperty(): float
     {
-        return 0;
+        $diskon = trim($this->diskon);
+        return $diskon === '' ? 0.0 : (float) $diskon;
     }
 
     public function getTotalProperty(): float
     {
-        return $this->subtotal - $this->diskon;
+        return $this->subtotal - $this->getDiskonProperty();
     }
 
     public function getKembalianProperty(): float
     {
         $bayar = (float) $this->bayar;
         return max(0, $bayar - $this->total);
+    }
+
+    /**
+     * Set nilai bayar berdasarkan opsi quick amount
+     * Method ini menghindari issue saat menggunakan $set() langsung di blade
+     */
+    public function setBayar(string $type): void
+    {
+        // Validasi cart - hapus item yang barangnya sudah tidak ada di database
+        $this->validateCart();
+
+        $total = $this->total;
+        
+        switch ($type) {
+            case 'pas':
+                $this->bayar = (string) $total;
+                break;
+            case '50rb':
+                $this->bayar = (string) (ceil($total / 50000) * 50000);
+                break;
+            case '100rb':
+                $this->bayar = (string) (ceil($total / 100000) * 100000);
+                break;
+            default:
+                $this->bayar = (string) $total;
+        }
+    }
+
+    /**
+     * Validasi cart dan hapus item yang barangnya sudah tidak ada di database
+     */
+    protected function validateCart(): void
+    {
+        $validCart = [];
+        foreach ($this->cart as $item) {
+            $barang = BarangMaster::find($item['barang_id']);
+            if ($barang) {
+                // Update stok terbaru
+                $item['stok'] = $barang->stok;
+                $validCart[] = $item;
+            }
+        }
+        
+        if (count($validCart) !== count($this->cart)) {
+            $this->cart = $validCart;
+            $this->dispatch('notify', message: 'Beberapa barang telah dihapus dari keranjang karena sudah tidak tersedia.');
+        }
     }
 
     public function prosesTransaksi(): void
@@ -434,6 +503,13 @@ class PointOfSale extends Component
                 'message' => 'Transaksi berhasil! No Faktur: ' . $penjualan->no_faktur
             ]);
 
+            // Buka halaman print invoice untuk transaksi termin
+            if ($this->termin !== '0') {
+                $this->dispatch('open-print-invoice', [
+                    'url' => route('penjualan.print', $penjualan->id)
+                ]);
+            }
+
         } catch (\Exception $e) {
             $this->dispatch('show-alert', [
                 'type' => 'error',
@@ -467,9 +543,12 @@ class PointOfSale extends Component
                     $q->where('nama_barang', 'like', '%' . $this->searchBarang . '%')
                         ->orWhere('kode_barang', 'like', '%' . $this->searchBarang . '%');
                 });
-            })
-            ->limit(20)
-            ->get();
+            });
+
+// $barangs = $barangs->get()->groupBy(function($barang) {
+        //     return $barang->master->kategori ?? 'Lainnya';
+        // });
+        $barangs = $barangs->get();
 
         $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
 

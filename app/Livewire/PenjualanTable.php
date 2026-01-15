@@ -22,6 +22,7 @@ class PenjualanTable extends Component
     public string $sortDirection = 'desc';
     public int $perPage = 10;
     public $gudang_id = '';
+    public string $kategoriProduk = '';
 
 
 
@@ -30,6 +31,7 @@ class PenjualanTable extends Component
         'status' => ['except' => ''],
         'startDate' => ['except' => ''],
         'endDate' => ['except' => ''],
+        'kategoriProduk' => ['except' => ''],
     ];
 
 
@@ -79,6 +81,11 @@ class PenjualanTable extends Component
             $this->resetPage();
         }
 
+        public function updatingKategoriProduk()
+        {
+            $this->resetPage();
+        }
+
     public function sortBy(string $column): void
     {
         if ($this->sortBy === $column) {
@@ -117,6 +124,11 @@ class PenjualanTable extends Component
             ->when($this->status, function ($query) {
                 $query->where('status', $this->status);
             })
+            ->when($this->kategoriProduk, function ($query) {
+                $query->whereHas('detailPenjualan.barang', function ($q) {
+                    $q->where('kategori', $this->kategoriProduk);
+                });
+            })
             // Filter tanggal selalu aktif
             ->whereDate('tanggal', '>=', $startDate)
             ->whereDate('tanggal', '<=', $endDate)
@@ -129,16 +141,24 @@ class PenjualanTable extends Component
                 $query->where('gudang_id', $user->gudang_id);
             })
             ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
+            ->when($this->kategoriProduk, function ($query) {
+                $query->whereHas('detailPenjualan.barang', function ($q) {
+                    $q->where('kategori', $this->kategoriProduk);
+                });
+            })
             ->where('status', 'selesai')
             ->whereDate('tanggal', '>=', $startDate)
             ->whereDate('tanggal', '<=', $endDate)
             ->sum('total_bayar');
+
+        $kategoris = \App\Models\BarangMaster::select('kategori')->distinct()->whereNotNull('kategori')->pluck('kategori');
 
         $gudangs = Gudang::orderBy('nama_gudang')->get();
         return view('livewire.penjualan-table', [
             'penjualans' => $penjualans,
             'totalPenjualan' => $totalPenjualan,
             'gudangs' => $gudangs,
+            'kategoris' => $kategoris,
         ]);
     }
 }

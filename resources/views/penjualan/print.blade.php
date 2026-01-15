@@ -3,7 +3,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #{{ $penjualan->no_faktur }} - Ngarumi</title>
+    <title>{{ $penjualan->no_faktur }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -11,379 +11,381 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #1f2937; 
-            margin: 0; 
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Inter', Arial, sans-serif; 
+            background: #fff;
+            color: #333; 
+            font-size: 11px;
+            padding: 15px;
         }
         
         .invoice-container { 
-            max-width: 800px; 
-            margin: 40px auto; 
-            background: #ffffff;
-            border-radius: 20px; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            position: relative;
+            max-width: 700px; 
+            margin: 0 auto; 
+            border: 2px solid #4CAF50;
         }
         
-        .invoice-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 15px;
+            border-bottom: 2px solid #4CAF50;
         }
         
-        .header-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px;
-            position: relative;
-            overflow: hidden;
+        .company-info { flex: 1; }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4CAF50;
         }
         
-        .header-bg::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
+        .logo span { color: #FF9800; }
+        
+        .company-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: #4CAF50;
+            margin-top: 2px;
         }
         
-        .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            position: relative;
-            z-index: 1;
+        .nota-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4CAF50;
         }
         
-        .logo { 
-            font-size: 2.5rem; 
-            font-weight: 700; 
-            color: #ffffff;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .invoice-title { 
-            font-size: 2rem; 
-            font-weight: 700; 
-            color: #ffffff;
-            letter-spacing: 4px;
-            background: rgba(255,255,255,0.2);
-            padding: 12px 24px;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .content-wrapper {
-            padding: 40px;
-        }
-        
+        /* Info Section */
         .info-section {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-            border: 1px solid #d1d5db;
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 2px solid #4CAF50;
         }
         
-        .info-table { 
-            width: 100%; 
+        .address-info {
+            flex: 1;
+            font-size: 10px;
+            line-height: 1.4;
         }
         
-        .info-table td { 
-            padding: 10px 0; 
-            font-size: 1rem;
-            vertical-align: top;
+        .customer-info {
+            text-align: right;
+            font-size: 10px;
         }
         
-        .info-table td:first-child {
-            color: #6b7280;
+        .customer-info table { margin-left: auto; }
+        
+        .customer-info td { padding: 2px 4px; }
+        
+        .customer-info td:first-child {
+            color: #FF9800;
             font-weight: 500;
-            width: 140px;
         }
         
-        .info-table strong {
-            color: #111827;
+        .nota-number {
+            margin-top: 8px;
             font-weight: 600;
         }
         
-        .items-table { 
-            width: 100%; 
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-bottom: 24px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
         }
         
-        .items-table th { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff;
-            padding: 16px;
+        .items-table thead {
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+        }
+        
+        .items-table th {
+            color: white;
+            padding: 8px 6px;
             text-align: left;
             font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
+            font-size: 10px;
         }
         
-        .items-table td { 
-            border-bottom: 1px solid #e5e7eb;
-            padding: 14px 16px;
-            background: #ffffff;
+        .items-table td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+            font-size: 10px;
         }
         
-        .items-table tbody tr {
-            transition: all 0.2s ease;
+        .items-table tbody tr:hover { background: #f9f9f9; }
+        
+        /* Total Row */
+        .total-row {
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
         }
         
-        .items-table tbody tr:hover {
-            background: #f9fafb;
-            transform: scale(1.01);
+        .total-row td {
+            color: white;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 8px 6px;
+            border: none;
         }
         
-        .items-table tbody tr:last-child td {
-            border-bottom: none;
+        /* Footer */
+        .footer-section {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-top: 2px solid #4CAF50;
         }
         
-        .items-table tfoot td { 
-            font-weight: 600;
-            background: #f9fafb;
-            padding: 14px 16px;
-            border-top: 2px solid #e5e7eb;
+        .signature-left { flex: 1; }
+        
+        .payment-summary { width: 200px; }
+        
+        .payment-summary table { width: 100%; }
+        
+        .payment-summary td {
+            padding: 3px 6px;
+            font-size: 10px;
         }
         
-        .items-table tfoot tr:last-child td {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-top: 3px solid #f59e0b;
-            font-size: 1.15em;
+        .payment-summary .label {
+            text-align: right;
+            font-weight: 500;
         }
         
-        .status {
-            display: inline-block; 
-            padding: 6px 16px; 
-            border-radius: 999px;
-            font-size: 0.875rem; 
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .payment-summary .value {
+            text-align: right;
+            border: 1px solid #4CAF50;
+            background: #f9fff9;
         }
         
-        .status.selesai { 
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #047857;
-            border: 2px solid #10b981;
+        .signature-name {
+            margin-top: 35px;
+            font-size: 10px;
         }
         
-        .status.draft { 
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #b45309;
-            border: 2px solid #f59e0b;
+        /* Bottom */
+        .bottom-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            border-top: 1px solid #ddd;
         }
         
-        .status.termin { 
-            background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
-            color: #6b21a8;
-            border: 2px solid #9333ea;
+        .bottom-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4CAF50;
         }
         
-        .ml-2 {
-            margin-left: 8px;
-        }
+        .bottom-logo span { color: #FF9800; }
         
+        /* Termin Section */
         .termin-section {
-            margin-top: 32px;
-            padding: 24px;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-radius: 16px;
-            border: 2px solid #f59e0b;
+            margin: 10px 15px;
+            padding: 10px;
+            background: #fff8e1;
+            border: 1px solid #FF9800;
+            border-radius: 6px;
         }
         
         .termin-section strong {
-            font-size: 1.1rem;
-            color: #92400e;
+            font-size: 10px;
+            color: #e65100;
             display: block;
-            margin-bottom: 16px;
-        }
-        
-        .footer { 
-            text-align: center; 
-            color: #6b7280;
-            font-size: 0.95rem; 
-            margin-top: 40px;
-            padding: 32px 40px;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border-top: 1px solid #d1d5db;
-        }
-        
-        .footer b {
-            color: #667eea;
-            font-weight: 700;
-        }
-        
-        .footer div:first-child {
-            font-size: 1.1rem;
-            color: #374151;
             margin-bottom: 8px;
         }
         
+        .termin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+        
+        .termin-table th {
+            background: #FF9800;
+            color: white;
+            padding: 5px;
+            text-align: left;
+        }
+        
+        .termin-table td {
+            padding: 4px 5px;
+            border-bottom: 1px solid #ffe0b2;
+        }
+        
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+        
+        .status-lunas {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .status-belum {
+            background: #ffecb3;
+            color: #f57c00;
+        }
+        
         @media print {
-            body { 
-                background: #fff;
-                padding: 0;
-            }
-            .invoice-container { 
-                box-shadow: none; 
-                margin: 0;
-                border-radius: 0;
-            }
-            .invoice-container::before {
-                display: none;
-            }
-            .footer { 
-                display: none; 
-            }
-            .items-table tbody tr:hover {
-                transform: none;
-            }
+            body { padding: 0; }
+            .invoice-container { border: 2px solid #4CAF50; }
         }
     </style>
 </head>
 <body onload="window.print()">
 <div class="invoice-container">
-    <div class="header-bg">
-        <div class="header">
-            <div class="logo">Ngarumi</div>
-            <div class="invoice-title">INVOICE</div>
+    <!-- Header -->
+    <div class="header">
+        <div class="company-info">
+            <div class="logo">NU<span>Klerr</span></div>
+            <div class="company-name">PT PERSADA NAWA KARTIKA</div>
         </div>
+        <div class="nota-title">NOTA</div>
     </div>
     
-    <div class="content-wrapper">
-        <div class="info-section">
-            <table class="info-table">
+    <!-- Info Section -->
+    <div class="info-section">
+        <div class="address-info">
+            Jl. Supriyadi No. 24 Nganjuk /<br>
+            Ds. Juwono, Kec.<br>
+            Kertosono, Kabupaten<br>
+            Nganjuk
+            <div class="nota-number">
+                No. NOTA : {{ $penjualan->no_faktur }}
+            </div>
+        </div>
+        <div class="customer-info">
+            <table>
                 <tr>
-                    <td>No Faktur</td>
-                    <td>: <strong>{{ $penjualan->no_faktur }}</strong></td>
+                    <td>Nganjuk,</td>
+                    <td>{{ $penjualan->tanggal->format('d F Y') }}</td>
                 </tr>
                 <tr>
-                    <td>Tanggal</td>
-                    <td>: {{ $penjualan->tanggal->format('d F Y') }}</td>
-                </tr>
-                <tr>
-                    <td>Pelanggan</td>
-                    <td>: {{ $penjualan->pelanggan?->nama ?? 'Umum' }}</td>
+                    <td>Kepada Yth.</td>
+                    <td>{{ $penjualan->pelanggan?->nama_pelanggan ?? $penjualan->pelanggan?->nama ?? 'UMUM' }}</td>
                 </tr>
                 <tr>
                     <td>Kasir</td>
-                    <td>: {{ $penjualan->user?->name ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Status</td>
-                    <td>:
-                        <span class="status {{ $penjualan->status }}">
-                            {{ ucfirst($penjualan->status) }}
-                        </span>
-                        @if($penjualan->mode_termin === 'termin')
-                            <span class="status termin ml-2">Termin</span>
-                        @endif
-                    </td>
+                    <td>{{ $penjualan->user?->name ?? '-' }}</td>
                 </tr>
             </table>
         </div>
-        
-        <table class="items-table">
-            <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama Barang</th>
-                <th>Harga</th>
-                <th>Qty</th>
-                <th>Subtotal</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($penjualan->detailPenjualan as $i => $item)
-                <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->barang->nama_barang }}</td>
-                    <td>Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                    <td>{{ $item->jumlah }}</td>
-                    <td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-            <tfoot>
-            <tr>
-                <td colspan="4" style="text-align:right">Subtotal</td>
-                <td>Rp {{ number_format($penjualan->total_kotor, 0, ',', '.') }}</td>
-            </tr>
-            @if($penjualan->diskon_transaksi > 0)
-                <tr>
-                    <td colspan="4" style="text-align:right">Diskon</td>
-                    <td>- Rp {{ number_format($penjualan->diskon_transaksi, 0, ',', '.') }}</td>
-                </tr>
-            @endif
-            @if($penjualan->pajak > 0)
-                <tr>
-                    <td colspan="4" style="text-align:right">Pajak</td>
-                    <td>Rp {{ number_format($penjualan->pajak, 0, ',', '.') }}</td>
-                </tr>
-            @endif
-            <tr>
-                <td colspan="4" style="text-align:right;font-size:1.1em;">Total Bayar</td>
-                <td style="font-size:1.1em; color:#b45309;">Rp {{ number_format($penjualan->total_bayar, 0, ',', '.') }}</td>
-            </tr>
-            </tfoot>
-        </table>
-        
-        @if($penjualan->mode_termin === 'termin')
-            <div class="termin-section">
-                <strong>Detail Termin:</strong>
-                <table class="items-table" style="margin-top:8px; margin-bottom:0;">
-                    <thead>
-                    <tr>
-                        <th>Jatuh Tempo</th>
-                        <th>Jumlah Termin</th>
-                        <th>Sudah Dibayar</th>
-                        <th>Sisa Tagihan</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($penjualan->pembayaranPenjualan as $termin)
-                        <tr>
-                            <td>{{ $termin->tanggal_jatuh_tempo }}</td>
-                            <td>Rp {{ number_format($termin->jumlah, 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format($termin->jumlah_bayar ?? 0, 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format(max(0, $termin->jumlah - ($termin->jumlah_bayar ?? 0)), 0, ',', '.') }}</td>
-                            <td>
-                                <span class="status {{ $termin->status === 'lunas' ? 'selesai' : 'draft' }}">
-                                    {{ ucfirst($termin->status) }}
-                                </span>
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
     </div>
     
-    <div class="footer">
-        <div>Terima kasih telah berbelanja di <b>Ngarumi</b>! 🎉</div>
-        <div style="margin-top:8px;">Invoice dicetak pada {{ now()->format('d F Y H:i') }}</div>
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 30px;">No</th>
+                <th>Description</th>
+                <th style="width: 50px;">Qty</th>
+                <th style="width: 90px;">Unit Price</th>
+                <th style="width: 100px;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($penjualan->detailPenjualan as $i => $item)
+            <tr>
+                <td>{{ $i + 1 }}</td>
+                <td>{{ $item->barang->nama_barang }}</td>
+                <td>{{ $item->jumlah }}</td>
+                <td>Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+            </tr>
+            @endforeach
+            @if(count($penjualan->detailPenjualan) < 5)
+                @for($i = count($penjualan->detailPenjualan); $i < 5; $i++)
+                <tr><td colspan="5" style="height: 20px;"></td></tr>
+                @endfor
+            @endif
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3">Jumlah</td>
+                <td></td>
+                <td>Rp {{ number_format($penjualan->total_kotor, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <!-- Footer -->
+    <div class="footer-section">
+        <div class="signature-left">
+            <div>Hormat kami,</div>
+            <div class="signature-name">(..................)</div>
+        </div>
+        <div class="payment-summary">
+            <table>
+                <tr>
+                    <td class="label">Subtotal</td>
+                    <td class="value">Rp {{ number_format($penjualan->total_kotor, 0, ',', '.') }}</td>
+                </tr>
+                @if($penjualan->diskon_transaksi > 0)
+                <tr>
+                    <td class="label">Diskon</td>
+                    <td class="value">Rp {{ number_format($penjualan->diskon_transaksi, 0, ',', '.') }}</td>
+                </tr>
+                @endif
+                @if($penjualan->pajak > 0)
+                <tr>
+                    <td class="label">Pajak</td>
+                    <td class="value">Rp {{ number_format($penjualan->pajak, 0, ',', '.') }}</td>
+                </tr>
+                @endif
+                <tr>
+                    <td class="label" style="font-weight: 700;">TOTAL</td>
+                    <td class="value" style="font-weight: 700; background: #e8f5e9;">Rp {{ number_format($penjualan->total_bayar, 0, ',', '.') }}</td>
+                </tr>
+            </table>
+        </div>
+        <div style="text-align: right;">
+            <div>Penerima,</div>
+            <div class="signature-name">(..................)</div>
+        </div>
+    </div>
+    
+    @if($penjualan->mode_termin === 'termin')
+    <!-- Termin Section -->
+    <div class="termin-section">
+        <strong>Detail Termin Pembayaran:</strong>
+        <table class="termin-table">
+            <thead>
+                <tr>
+                    <th>Jatuh Tempo</th>
+                    <th>Tagihan</th>
+                    <th>Dibayar</th>
+                    <th>Sisa</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($penjualan->pembayaranPenjualan as $termin)
+                <tr>
+                    <td>{{ $termin->tanggal_jatuh_tempo }}</td>
+                    <td>Rp {{ number_format($termin->jumlah, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format($termin->jumlah_bayar ?? 0, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format(max(0, $termin->jumlah - ($termin->jumlah_bayar ?? 0)), 0, ',', '.') }}</td>
+                    <td>
+                        <span class="status-badge {{ $termin->status === 'lunas' ? 'status-lunas' : 'status-belum' }}">
+                            {{ ucfirst($termin->status) }}
+                        </span>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+    
+    <!-- Bottom Logo -->
+    <div class="bottom-section">
+        <div class="bottom-logo">NU<span>Klerr</span></div>
+        <div style="font-size: 9px; color: #666;">Dicetak: {{ now()->format('d/m/Y H:i') }}</div>
     </div>
 </div>
 </body>
