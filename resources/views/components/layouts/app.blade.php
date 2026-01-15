@@ -234,7 +234,80 @@
             Livewire.on('notify', (event) => {
                 const message = event.message || event[0]?.message;
                 if (message) {
-                    alert(message);
+                    // Create toast container if not exists
+                    let container = document.getElementById('toast-notify-container');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'toast-notify-container';
+                        container.className = 'fixed top-5 right-5 z-[9999] flex flex-col gap-3';
+                        document.body.appendChild(container);
+                    }
+
+                    // Create toast element
+                    const toast = document.createElement('div');
+                    toast.className = 'group flex items-center gap-3 bg-white border border-emerald-200 shadow-xl rounded-2xl px-5 py-4 min-w-[320px] max-w-[420px] transform translate-x-full opacity-0 transition-all duration-500 ease-out hover:shadow-2xl hover:scale-[1.02]';
+                    toast.innerHTML = `
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-200">
+                                <svg class="w-6 h-6 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shadow-md animate-ping-slow">
+                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-emerald-700">Berhasil!</p>
+                            <p class="text-sm text-gray-600 mt-0.5 leading-snug">${message}</p>
+                        </div>
+                        <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all opacity-0 group-hover:opacity-100" onclick="this.parentElement.remove()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 rounded-b-2xl overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 toast-progress"></div>
+                        </div>
+                    `;
+                    container.appendChild(toast);
+
+                    // Add animation styles if not exists
+                    if (!document.getElementById('toast-notify-styles')) {
+                        const style = document.createElement('style');
+                        style.id = 'toast-notify-styles';
+                        style.textContent = `
+                            @keyframes toast-progress {
+                                from { width: 100%; }
+                                to { width: 0%; }
+                            }
+                            @keyframes ping-slow {
+                                0%, 100% { transform: scale(1); opacity: 1; }
+                                50% { transform: scale(1.2); opacity: 0.7; }
+                            }
+                            .toast-progress {
+                                animation: toast-progress 3s linear forwards;
+                            }
+                            .animate-ping-slow {
+                                animation: ping-slow 1s ease-in-out 2;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+
+                    // Trigger animation
+                    requestAnimationFrame(() => {
+                        toast.classList.remove('translate-x-full', 'opacity-0');
+                        toast.classList.add('translate-x-0', 'opacity-100');
+                    });
+
+                    // Auto remove with animation
+                    setTimeout(() => {
+                        toast.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => toast.remove(), 500);
+                    }, 3000);
                 }
             });
 
