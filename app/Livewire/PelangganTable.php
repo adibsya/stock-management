@@ -11,6 +11,7 @@ class PelangganTable extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $kota = '';
     public string $sortBy = 'nama_pelanggan';
     public string $sortDirection = 'asc';
     public int $perPage = 10;
@@ -20,6 +21,11 @@ class PelangganTable extends Component
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingKota()
     {
         $this->resetPage();
     }
@@ -50,6 +56,21 @@ class PelangganTable extends Component
 
     public function render()
     {
+        // Get unique cities from alamat field
+        $kotas = Pelanggan::query()
+            ->whereNotNull('alamat')
+            ->where('alamat', '!=', '')
+            ->pluck('alamat')
+            ->map(function ($alamat) {
+                // Extract city name (last word or after comma)
+                $parts = preg_split('/[,\/]/', $alamat);
+                return trim(end($parts));
+            })
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         $pelanggans = Pelanggan::query()
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -57,11 +78,16 @@ class PelangganTable extends Component
                         ->orWhere('no_hp', 'like', '%' . $this->search . '%');
                 });
             })
+            ->when($this->kota, function ($query) {
+                $query->where('alamat', 'like', '%' . $this->kota . '%');
+            })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate($this->perPage);
 
         return view('livewire.pelanggan-table', [
             'pelanggans' => $pelanggans,
+            'kotas' => $kotas,
         ]);
     }
 }
+

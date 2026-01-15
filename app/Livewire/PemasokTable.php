@@ -11,6 +11,7 @@ class PemasokTable extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $kota = '';
     public string $sortBy = 'nama_supplier';
     public string $sortDirection = 'asc';
     public int $perPage = 10;
@@ -20,6 +21,11 @@ class PemasokTable extends Component
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingKota()
     {
         $this->resetPage();
     }
@@ -50,6 +56,20 @@ class PemasokTable extends Component
 
     public function render()
     {
+        // Get unique cities from alamat field
+        $kotas = Pemasok::query()
+            ->whereNotNull('alamat')
+            ->where('alamat', '!=', '')
+            ->pluck('alamat')
+            ->map(function ($alamat) {
+                $parts = preg_split('/[,\/]/', $alamat);
+                return trim(end($parts));
+            })
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         $pemasoks = Pemasok::query()
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -57,11 +77,16 @@ class PemasokTable extends Component
                         ->orWhere('kontak', 'like', '%' . $this->search . '%');
                 });
             })
+            ->when($this->kota, function ($query) {
+                $query->where('alamat', 'like', '%' . $this->kota . '%');
+            })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate($this->perPage);
 
         return view('livewire.pemasok-table', [
             'pemasoks' => $pemasoks,
+            'kotas' => $kotas,
         ]);
     }
 }
+
