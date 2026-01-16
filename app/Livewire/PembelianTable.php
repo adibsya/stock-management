@@ -60,7 +60,7 @@ class PembelianTable extends Component
     public function delete($payload)
     {
         $id = is_array($payload) ? $payload[0] : $payload;
-        $pembelian = \App\Models\Pembelian::with('detailPembelian')->findOrFail($id);
+        $pembelian = Pembelian::with('detailPembelian')->findOrFail($id);
         foreach ($pembelian->detailPembelian as $detail) {
             $stok = \App\Models\StokBarang::where('barang_master_id', $detail->barang_master_id)
                 ->where('gudang_id', $pembelian->gudang_id)

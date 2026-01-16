@@ -251,8 +251,8 @@ class TransaksiService
             // JURNAL OTOMATIS: Pembelian
             if (($data['mode_termin'] ?? 'cash') === 'termin') {
                 // Pembelian Kredit (Termin): Persediaan & Hutang Usaha
-                $hutang = \App\Models\PosMasterData::where('kode', '2-01-01')->where('level', 2)->first(); // Hutang Usaha
-                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                $hutang = PosMasterData::where('kode', '2-01-01')->where('level', 2)->first(); // Hutang Usaha
+                $persediaan = PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
                 \Log::debug('Cek jurnal pembelian termin', [
                     'hutang' => $hutang,
                     'persediaan' => $persediaan,
@@ -287,8 +287,8 @@ class TransaksiService
                 }
             } else {
                 // Pembelian Tunai: Persediaan & Kas/Bank
-                $kasbank = \App\Models\PosMasterData::where('kode', '1-01-01')->where('level', 2)->first(); // Kas dan Bank
-                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                $kasbank = PosMasterData::where('kode', '1-01-01')->where('level', 2)->first(); // Kas dan Bank
+                $persediaan = PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
                 \Log::debug('Cek jurnal pembelian tunai', [
                     'kasbank' => $kasbank,
                     'persediaan' => $persediaan,

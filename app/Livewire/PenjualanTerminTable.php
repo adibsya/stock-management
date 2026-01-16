@@ -106,7 +106,7 @@ class PenjualanTerminTable extends Component
         ]);
 
         // Ambil ulang model fresh dari database
-        $termin = \App\Models\PembayaranPenjualan::findOrFail($this->selectedTermin->id);
+        $termin = PembayaranPenjualan::findOrFail($this->selectedTermin->id);
         $sisa = $termin->jumlah - ($termin->jumlah_bayar ?? 0);
 
 
