@@ -16,7 +16,7 @@ class PembelianTable extends Component
     public string $statusBayar = '';
     public string $startDate = '';
     public string $endDate = '';
-    public string $sortBy = 'tanggal';
+    public string $sortColumn = 'tanggal';
     public string $sortDirection = 'desc';
     public int $perPage = 10;
     public string $kategoriProduk = '';
@@ -50,11 +50,11 @@ class PembelianTable extends Component
 
     public function sortBy(string $column): void
     {
-        if ($this->sortBy === $column) {
+        if ($this->sortColumn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'desc';
+            $this->sortColumn = $column;
+            $this->sortDirection = 'asc';
         }
     }
     public function delete($payload)
@@ -116,7 +116,7 @@ class PembelianTable extends Component
                     $q->where('kategori', $this->kategoriProduk);
                 });
             })
-            ->orderBy($this->sortBy, $this->sortDirection)
+            ->orderBy($this->sortColumn, $this->sortDirection)
             ->paginate($this->perPage);
 
         $totalPembelian = Pembelian::query()
