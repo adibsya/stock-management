@@ -33,58 +33,113 @@
 
             {{-- Gudang --}}
             @if($showGudangFilter)
-            <div class="space-y-2">
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('gudangId').live }" @click.away="open = false">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Gudang</label>
                 <div class="relative">
-                    <select wire:model.live="gudangId" 
-                            class="w-full px-4 py-3 pr-10 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 appearance-none cursor-pointer">
-                        <option value="">Semua Gudang</option>
-                        @foreach($gudangs as $gudang)
-                            <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
-                        @endforeach
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="value ? (@js($gudangs->pluck('nama_gudang', 'id'))[value] || 'Semua Gudang') : 'Semua Gudang'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2 max-h-60 overflow-y-auto">
+                            <button @click="value = ''; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="!value ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="!value" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                Semua Gudang
+                            </button>
+                            @foreach($gudangs as $gudang)
+                            <button @click="value = '{{ $gudang->id }}'; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="value == '{{ $gudang->id }}' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="value == '{{ $gudang->id }}'" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                {{ $gudang->nama_gudang }}
+                            </button>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
             @endif
 
             {{-- Status Bayar --}}
-            <div class="space-y-2">
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('statusBayar').live, labels: { '': 'Semua Status', 'lunas': 'Lunas', 'belum_lunas': 'Belum Lunas' } }" @click.away="open = false">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Bayar</label>
                 <div class="relative">
-                    <select wire:model.live="statusBayar" 
-                            class="w-full px-4 py-3 pr-10 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 appearance-none cursor-pointer">
-                        <option value="">Semua Status</option>
-                        <option value="lunas">Lunas</option>
-                        <option value="belum_lunas">Belum Lunas</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="labels[value] || 'Semua Status'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2">
+                            <template x-for="(label, key) in labels" :key="key">
+                                <button @click="value = key; open = false" type="button"
+                                        class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                        :class="value === key ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                    <span class="w-4"><svg x-show="value === key" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                    <span x-text="label"></span>
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Kategori --}}
-            <div class="space-y-2">
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('kategoriProduk').live }" @click.away="open = false">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</label>
                 <div class="relative">
-                    <select wire:model.live="kategoriProduk" 
-                            class="w-full px-4 py-3 pr-10 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 appearance-none cursor-pointer">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoris as $kategori)
-                            <option value="{{ $kategori }}">{{ $kategori }}</option>
-                        @endforeach
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="value || 'Semua Kategori'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2 max-h-60 overflow-y-auto">
+                            <button @click="value = ''; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="!value ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="!value" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                Semua Kategori
+                            </button>
+                            @foreach($kategoris as $kategori)
+                            <button @click="value = '{{ $kategori }}'; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="value === '{{ $kategori }}' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="value === '{{ $kategori }}'" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                {{ $kategori }}
+                            </button>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
