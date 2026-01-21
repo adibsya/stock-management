@@ -150,7 +150,7 @@ class TransaksiService
 
         app(\App\Services\JurnalService::class)->create(
             $penjualan->tanggal,
-            'HPP Penjualan ' . $penjualan->no_faktur,
+            'HPP' . $penjualan->no_faktur,
             'penjualan',
             $penjualan->id,
             [
@@ -320,6 +320,109 @@ class TransaksiService
         });
     }
 
+  public function bayarTerminPenjualan(int $terminId, float $jumlahBayar)
+{
+    return DB::transaction(function () use ($terminId, $jumlahBayar) {
+
+        // 🔒 Lock termin
+        $termin = \App\Models\PembayaranPenjualan::lockForUpdate()
+            ->with('penjualan')
+            ->findOrFail($terminId);
+
+        $penjualan = $termin->penjualan;
+
+        // =========================
+        // 1. UPDATE TERMIN
+        // =========================
+        $totalBayar = ($termin->jumlah_bayar ?? 0) + $jumlahBayar;
+
+        $termin->update([
+            'jumlah_bayar' => $totalBayar,
+            'pembayaran_terakhir' => $jumlahBayar,
+            'tanggal_bayar' => now(),
+            'status' => $totalBayar >= $termin->jumlah ? 'lunas' : 'belum_lunas',
+        ]);
+
+        // =========================
+        // 2. UPDATE STATUS PENJUALAN
+        // =========================
+        $totalTerbayar = \App\Models\PembayaranPenjualan::where('penjualan_id', $penjualan->id)
+            ->sum('jumlah_bayar');
+
+        if ($totalTerbayar >= $penjualan->total_bayar) {
+            $penjualan->update(['status_bayar' => 'lunas']);
+        }
+
+        // =========================
+        // 3. JURNAL PEMBAYARAN TERMIN
+        // =========================
+        $kas = PosMasterData::where('kode', '1-01-01')->first();
+        $piutang = PosMasterData::where('kode', '1-01-02')->first();
+
+        if (!$kas || !$piutang) {
+            throw new \Exception('COA Kas / Piutang belum diset');
+        }
+
+        \App\Services\JurnalService::create(
+            now(),
+            'Pembayaran Termin Penjualan ' . $penjualan->no_faktur,
+            'pembayaran_penjualan',
+            $termin->id,
+            [
+                ['coa_id' => $kas->id, 'debit' => $jumlahBayar],
+                ['coa_id' => $piutang->id, 'kredit' => $jumlahBayar],
+            ]
+        );
+
+        return $termin;
+    });
+}
+
+public function pengeluaranOperasional(array $data): Pengeluaran
+{
+    return DB::transaction(function () use ($data) {
+
+        // =========================
+        // 1. SIMPAN PENGELUARAN
+        // =========================
+        $pengeluaran = Pengeluaran::create([
+            'tanggal' => $data['tanggal'],
+            'jenis_pengeluaran' => $data['jenis_pengeluaran'],
+            'jumlah_biaya' => $data['jumlah_biaya'],
+            'keterangan' => $data['keterangan'] ?? null,
+            'gudang_id' => $data['gudang_id'],
+            'user_id' => $data['user_id'],
+        ]);
+
+        // =========================
+        // 2. AMBIL AKUN COA
+        // =========================
+        $beban = PosMasterData::where('kode', '6-01-01')->first(); // Beban Operasional
+        $kas   = PosMasterData::where('kode', '1-01-01')->first(); // Kas / Bank
+
+        if (!$beban || !$kas) {
+            throw new \Exception('COA Beban Operasional / Kas belum disetting');
+        }
+
+        // =========================
+        // 3. JURNAL OTOMATIS
+        // =========================
+        app(\App\Services\JurnalService::class)->create(
+            $pengeluaran->tanggal,
+            'Pengeluaran Operasional - ' . $pengeluaran->jenis_pengeluaran,
+            'pengeluaran',
+            $pengeluaran->id,
+            [
+                ['coa_id' => $beban->id, 'debit' => $pengeluaran->jumlah_biaya],
+                ['coa_id' => $kas->id, 'kredit' => $pengeluaran->jumlah_biaya],
+            ]
+        );
+
+        return $pengeluaran;
+    });
+}
+
+
     /**
      * Generate laporan laba rugi
      * 
@@ -428,61 +531,6 @@ class TransaksiService
      * @param array $data
      * @return \App\Models\Retur
      */
-    public function prosesReturPenjualan(array $data)
-    {
-        // Cek stok terlebih dahulu sebelum membuat retur
-        $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
-            ->where('gudang_id', $data['gudang_id'])
-            ->first();
-        
-        if (!$stok) {
-            return [
-                'success' => false,
-                'message' => 'Stok barang tidak ditemukan di gudang ini!'
-            ];
-        }
-        
-        if ($stok->jumlah < $data['jumlah']) {
-            return [
-                'success' => false,
-                'message' => 'Stok barang pengganti tidak mencukupi! Tersedia: ' . $stok->jumlah
-            ];
-        }
-
-        return DB::transaction(function () use ($data, $stok) {
-            $retur = \App\Models\Retur::create([
-                'tanggal' => $data['tanggal'] ?? now(),
-                'jenis_retur' => 'retur_penjualan',
-                'referensi_faktur' => $data['referensi_faktur'],
-                'barang_id' => $data['barang_id'],
-                'jumlah' => $data['jumlah'],
-                'alasan' => $data['alasan'] ?? null,
-                'kondisi_barang' => $data['kondisi_barang'] ?? 'rusak',
-                'aksi_stok' => 'buang', // Barang rusak dibuang, tidak kembali ke stok
-                'nilai_pengembalian' => 0, // Tidak ada pengembalian uang, ambil barang pengganti
-            ]);
-            
-            $stok->jumlah -= $data['jumlah']; // Kurangi stok untuk barang pengganti
-            $stok->save();
-            
-            // Catat ke riwayat stok (pengambilan barang pengganti)
-            RiwayatStok::create([
-                'tanggal' => $retur->tanggal,
-                'barang_id' => $data['barang_id'],
-                'jenis_transaksi' => 'retur_keluar', // Keluar karena ambil barang pengganti
-                'jumlah_masuk' => 0,
-                'jumlah_keluar' => $data['jumlah'],
-                'sisa_stok' => $stok->jumlah,
-                'referensi_id' => 'RTR-' . $retur->id,
-            ]);
-            
-            return [
-                'success' => true,
-                'data' => $retur,
-                'message' => 'Retur berhasil diproses'
-            ];
-        });
-    }
 
     /**
      * Proses retur pembelian
@@ -523,6 +571,7 @@ class TransaksiService
             return $retur;
         });
     }
+
 
     /**
      * Stock Opname - Sesuaikan stok dengan stok fisik

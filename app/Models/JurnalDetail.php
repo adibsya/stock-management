@@ -19,4 +19,9 @@ class JurnalDetail extends Model
     {
         return $this->belongsTo(Jurnal::class, 'jurnal_id');
     }
+
+    public function coa(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\PosMasterData::class, 'coa_id');
+    }
 }

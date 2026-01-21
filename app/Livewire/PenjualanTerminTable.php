@@ -2,7 +2,9 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Services\TransaksiService;
 use App\Models\PembayaranPenjualan;
+use Illuminate\Support\Facades\DB;
 
 class PenjualanTerminTable extends Component
 {
@@ -83,6 +85,13 @@ class PenjualanTerminTable extends Component
             'metode_pembayaran' => $this->metode_pembayaran,
             'status' => $total >= $termin->jumlah ? 'lunas' : 'belum_lunas',
         ]);
+
+        app(TransaksiService::class)
+        ->bayarTerminPenjualan(
+            $this->selectedTermin->id,
+            $this->jumlah
+        );
+
 
         $this->loadTermins();
         $this->closeModal();

@@ -1,26 +1,33 @@
-<div class="space-y-8">
+<div class="space-y-10">
 
     {{-- FORM --}}
-    <div class="bg-white rounded-xl shadow-sm border p-6 max-w-xl">
-        <h3 class="text-lg font-semibold mb-6 text-gray-800">
-            Tambah Akun (Detail)
-        </h3>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-8 max-w-xl">
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold text-gray-800">
+                Tambah Akun Detail
+            </h3>
+            <p class="text-sm text-gray-500">
+                Tambahkan akun baru ke dalam struktur chart of account
+            </p>
+        </div>
 
         @if (session()->has('success'))
-            <div class="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+            <div class="mb-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
                 {{ session('success') }}
             </div>
         @endif
 
-        <div class="space-y-5">
+        <div class="space-y-6">
 
             {{-- Parent akun --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
                     Kelompok Akun
                 </label>
                 <select wire:model="parent_id"
-                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        class="w-full rounded-xl border-2 border-gray-300 bg-white text-sm
+                               hover:border-blue-400
+                               focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
                     <option value="">-- pilih --</option>
                     @foreach($parents as $p)
                         <option value="{{ $p->id }}">
@@ -35,14 +42,16 @@
 
             {{-- Nama akun --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
                     Nama Akun
                 </label>
                 <input
                     wire:model="nama"
                     type="text"
-                    class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="contoh: Kas Kecil"
+                    class="w-full rounded-xl border-2 border-gray-300 bg-white text-sm
+                           hover:border-blue-400
+                           focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                    placeholder="Masukkan nama akun"
                 />
                 @error('nama')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -51,12 +60,13 @@
 
             {{-- Preview kode --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
                     Kode Akun (Otomatis)
                 </label>
                 <input
                     type="text"
-                    class="w-full rounded-lg border-gray-200 bg-gray-100 text-gray-600 cursor-not-allowed"
+                    class="w-full rounded-xl border-2 border-dashed border-gray-300
+                           bg-gray-50 text-sm text-gray-600 cursor-not-allowed"
                     value="{{ $previewKode ?? '-' }}"
                     readonly
                 />
@@ -65,7 +75,9 @@
             <div class="pt-2">
                 <button
                     wire:click="save"
-                    class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition">
+                    class="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white
+                           hover:bg-blue-700
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition">
                     Simpan Akun
                 </button>
             </div>
@@ -74,48 +86,61 @@
     </div>
 
     {{-- TABEL --}}
-    <div class="bg-white rounded-xl shadow-sm border p-6">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800">
-            Daftar Akun
-        </h3>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+        <div class="mb-5">
+            <h3 class="text-xl font-semibold text-gray-800">
+                Daftar Akun
+            </h3>
+            <p class="text-sm text-gray-500">
+                Struktur akun yang digunakan untuk jurnal dan laporan keuangan
+            </p>
+        </div>
 
-        <div class="overflow-x-auto rounded-lg border">
+        <div class="overflow-x-auto rounded-xl border border-gray-200">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-50 text-gray-600">
                     <tr>
-                        <th class="px-3 py-2 text-left font-medium">Kode</th>
-                        <th class="px-3 py-2 text-left font-medium">Nama</th>
-                        <th class="px-3 py-2 text-left font-medium">Kategori</th>
-                        <th class="px-3 py-2 text-left font-medium">Sub Kategori</th>
-                        <th class="px-3 py-2 text-center font-medium">Normal</th>
-                        <th class="px-3 py-2 text-center font-medium">Level</th>
-                        <th class="px-3 py-2 text-center font-medium">Tipe</th>
-                        <th class="px-3 py-2 text-left font-medium">Induk</th>
+                        <th class="px-4 py-3 text-left font-medium">Kode</th>
+                        <th class="px-4 py-3 text-left font-medium">Nama</th>
+                        <th class="px-4 py-3 text-left font-medium">Kategori</th>
+                        <th class="px-4 py-3 text-left font-medium">Sub</th>
+                        <th class="px-4 py-3 text-center font-medium">Normal</th>
+                        <th class="px-4 py-3 text-center font-medium">Level</th>
+                        <th class="px-4 py-3 text-center font-medium">Tipe</th>
+                        <th class="px-4 py-3 text-left font-medium">Induk</th>
                     </tr>
                 </thead>
 
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-gray-100">
                     @foreach($pos as $item)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-3 py-2 font-mono">{{ $item->kode }}</td>
-                            <td class="px-3 py-2">{{ $item->nama }}</td>
-                            <td class="px-3 py-2">{{ $item->kategori ?? '-' }}</td>
-                            <td class="px-3 py-2">{{ $item->sub_kategori ?? '-' }}</td>
-                            <td class="px-3 py-2 text-center">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 font-mono text-gray-800">
+                                {{ $item->kode }}
+                            </td>
+                            <td class="px-4 py-3 font-medium text-gray-800">
+                                {{ $item->nama }}
+                            </td>
+                            <td class="px-4 py-3 text-gray-600">
+                                {{ $item->kategori ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-gray-600">
+                                {{ $item->sub_kategori ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-center font-semibold">
                                 {{ $item->normal_saldo }}
                             </td>
-                            <td class="px-3 py-2 text-center">
+                            <td class="px-4 py-3 text-center">
                                 {{ $item->level }}
                             </td>
-                            <td class="px-3 py-2 text-center">
-                                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium
-                                    {{ $item->level >= 2 
-                                        ? 'bg-green-100 text-green-700' 
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium
+                                    {{ $item->level >= 2
+                                        ? 'bg-emerald-100 text-emerald-700'
                                         : 'bg-gray-200 text-gray-700' }}">
                                     {{ $item->level >= 2 ? 'Posting' : 'Header' }}
                                 </span>
                             </td>
-                            <td class="px-3 py-2">
+                            <td class="px-4 py-3 text-gray-700">
                                 {{ optional($item->parent)->nama ?? '-' }}
                             </td>
                         </tr>

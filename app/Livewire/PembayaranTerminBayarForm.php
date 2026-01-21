@@ -4,6 +4,9 @@ namespace App\Livewire;
 
 use App\Models\PembayaranPembelian;
 use Livewire\Component;
+use App\Services\TransaksiPembelianService;
+use Illuminate\Support\Facades\DB;
+
 
 class PembayaranTerminBayarForm extends Component
 {
@@ -81,6 +84,11 @@ class PembayaranTerminBayarForm extends Component
         ]);
          $this->dispatch('closeModalBayar');
         // Tidak redirect, biarkan modal tertutup dan tabel refresh jika perlu
+
+        TransaksiPembelianService::bayarTerminPembelian(
+            $this->termin,   // ← ID
+            (float)$this->jumlah
+        );
     }
 
     public function render()

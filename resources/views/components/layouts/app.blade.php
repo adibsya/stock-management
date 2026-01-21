@@ -141,12 +141,33 @@
                     <p class="sidebar-section-title">Keuangan</p>
                 </div>
 
-                <a href="{{ route('jurnal.index') }}" class="sidebar-link {{ request()->routeIs('jurnal.index') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"></path>
-                    </svg>
-                    Jurnal
-                </a>
+                    <a href="{{ route('jurnal.index') }}" class="sidebar-link {{ request()->routeIs('jurnal.index') ? 'active' : '' }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"></path>
+                        </svg>
+                        Jurnal
+                    </a>
+
+                    <a href="{{ route('trial-balance.index') }}" class="sidebar-link {{ request()->routeIs('trial-balance.index') ? 'active' : '' }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 17h16M4 13h16M4 9h16M4 5h16" />
+                        </svg>
+                        Trial Balance
+                    </a>
+
+                    <a href="{{ route('buku-besar.index') }}" class="sidebar-link {{ request()->routeIs('buku-besar.index') ? 'active' : '' }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 17h16M4 13h16M4 9h16M4 5h16" />
+                        </svg>
+                        Buku Besar
+                    </a>
+                    
+                    <a href="{{ route('jurnal-umum.create') }}" class="sidebar-link {{ request()->routeIs('jurnal-umum.create') ? 'active' : '' }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h18M3 7h18M3 11h18M3 15h18M3 19h18"></path>
+                        </svg>
+                        Jurnal Umum
+                    </a>
 
                 <div class="sidebar-section">
                     <p class="sidebar-section-title">Laporan</p>

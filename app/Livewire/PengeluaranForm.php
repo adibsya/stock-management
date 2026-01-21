@@ -6,6 +6,8 @@ use App\Models\Pengeluaran;
 use App\Models\Gudang;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use App\Services\TransaksiService;
+
 
 class PengeluaranForm extends Component
 {
@@ -48,7 +50,8 @@ class PengeluaranForm extends Component
     {
         $this->validate();
 
-        Pengeluaran::create([
+    app(\App\Services\TransaksiService::class)
+        ->pengeluaranOperasional([
             'tanggal' => $this->tanggal,
             'jenis_pengeluaran' => $this->jenis_pengeluaran,
             'jumlah_biaya' => $this->jumlah_biaya,

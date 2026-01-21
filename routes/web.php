@@ -3,7 +3,7 @@
 use App\Livewire\BarangMasterTable;
 use App\Livewire\StokBarangForm;
 use App\Livewire\BarangMasterForm;
-
+use App\Livewire\JurnalUmumForm;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GudangController;
@@ -92,8 +92,19 @@ Route::middleware('auth')->group(function () {
     // Kasir pembayaran termin penjualan (Kasir Form)
     Route::get('/penjualan-termin/kasir/{penjualan}', App\Livewire\PenjualanKasirForm::class)->name('penjualan-termin.kasir');
 
-        // Jurnal - Tabel Jurnal
-        Route::get('/jurnal', App\Livewire\JurnalTable::class)->name('jurnal.index');
+    // ROUTING KEUANGAN INI BRO 
+    Route::get('/jurnal', App\Livewire\JurnalTable::class)->name('jurnal.index');
+
+    Route::get('/trial-balance', \App\Livewire\TrialBalance::class)
+    ->name('trial-balance.index');
+
+    Route::get('/buku-besar', \App\Livewire\BukuBesar::class)
+    ->name('buku-besar.index');
+
+    Route::get('/jurnal-umum/baru', JurnalUmumForm::class)
+            ->name('jurnal-umum.create');
+
+
     // Master Data - Pelanggan
     Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
         Route::get('/', [PelangganController::class, 'index'])->name('index');

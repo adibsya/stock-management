@@ -9,6 +9,7 @@ use App\Models\BarangMaster;
 use App\Models\PembayaranPembelian;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use App\Services\TransaksiPembelianService;
 
 class PembelianKasirForm extends Component
 {
@@ -337,6 +338,8 @@ class PembelianKasirForm extends Component
                     ]);
                 }
             }
+            TransaksiPembelianService::jurnalPembelian($pembelian);
+
         });
 
         session()->flash('success', 'Transaksi pembelian berhasil disimpan!');

@@ -5,6 +5,9 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use App\Models\PembayaranPenjualan;
+use App\Services\TransaksiService;
+use Illuminate\Support\Facades\DB;
+
 
 class PenjualanTerminBayarForm extends Component
 {
@@ -40,22 +43,26 @@ public function openModal($data)
             'metode_pembayaran' => 'required',
         ]);
 
-        $sisa = $this->termin->jumlah - ($this->termin->jumlah_bayar ?? 0);
 
+        $sisa = $this->termin->jumlah - ($this->termin->total_terbayar ?? 0);
         if ($this->jumlah > $sisa) {
             session()->flash('error', 'Pembayaran melebihi sisa tagihan');
             return;
         }
 
-        $total = ($this->termin->jumlah_bayar ?? 0) + $this->jumlah;
+        $total = ($this->termin->total_terbayar ?? 0) + $this->jumlah;
 
         $this->termin->update([
-            'jumlah_bayar' => $total,
+            'total_terbayar' => $total,
             'tanggal_bayar' => $this->tanggal_bayar,
             'metode_pembayaran' => $this->metode_pembayaran,
             'catatan' => $this->catatan,
             'status' => $total >= $this->termin->jumlah ? 'lunas' : 'belum_lunas',
         ]);
+
+        app(\App\Services\TransaksiService::class)
+    ->bayarTerminPenjualan($this->penjualan_id, $this->jumlah_bayar);
+
 
         session()->flash('success', 'Pembayaran berhasil');
         $this->closeModal();
