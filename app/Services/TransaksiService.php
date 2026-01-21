@@ -119,7 +119,7 @@ class TransaksiService
         }
 
         // =========================
-        // 5. JURNAL PENJUALAN
+        // 5. JURNAL PENJUALAN (optional - skip if COA not found)
         // =========================
         $akunPendapatan = PosMasterData::where('kode', '4-01-01')->first();
         $akunKas = PosMasterData::where('kode', '1-01-01')->first();
@@ -131,23 +131,27 @@ class TransaksiService
             $debitAkun = $akunKas;
         }
 
-        app(\App\Services\JurnalService::class)->create(
-            $penjualan->tanggal,
-            'Penjualan ' . $penjualan->no_faktur,
-            'penjualan',
-            $penjualan->id,
-            [
-                ['coa_id' => $debitAkun->id, 'debit' => $totalBayar],
-                ['coa_id' => $akunPendapatan->id, 'kredit' => $totalBayar],
-            ]
-        );
+        // Only create jurnal if all COA accounts exist
+        if ($debitAkun && $akunPendapatan) {
+            app(\App\Services\JurnalService::class)->create(
+                $penjualan->tanggal,
+                'Penjualan ' . $penjualan->no_faktur,
+                'penjualan',
+                $penjualan->id,
+                [
+                    ['coa_id' => $debitAkun->id, 'debit' => $totalBayar],
+                    ['coa_id' => $akunPendapatan->id, 'kredit' => $totalBayar],
+                ]
+            );
+        }
 
         // =========================
-        // 6. JURNAL HPP
+        // 6. JURNAL HPP (optional - skip if COA not found)
         // =========================
         $akunHpp = PosMasterData::where('kode', '5-01-01')->first();
         $akunPersediaan = PosMasterData::where('kode', '1-01-04')->first();
 
+<<<<<<< HEAD
         app(\App\Services\JurnalService::class)->create(
             $penjualan->tanggal,
             'HPP' . $penjualan->no_faktur,
@@ -158,6 +162,21 @@ class TransaksiService
                 ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
             ]
         );
+=======
+        // Only create HPP jurnal if all COA accounts exist
+        if ($akunHpp && $akunPersediaan) {
+            app(\App\Services\JurnalService::class)->create(
+                $penjualan->tanggal,
+                'HPP Penjualan ' . $penjualan->no_faktur,
+                'penjualan',
+                $penjualan->id,
+                [
+                    ['coa_id' => $akunHpp->id, 'debit' => $hpp],
+                    ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
+                ]
+            );
+        }
+>>>>>>> e97b32de2a5bbb8ee4d4f821673fb41ae8e466f1
 
         return $penjualan->load('detailPenjualan.barang');
     });
@@ -245,8 +264,8 @@ class TransaksiService
             // JURNAL OTOMATIS: Pembelian
             if (($data['mode_termin'] ?? 'cash') === 'termin') {
                 // Pembelian Kredit (Termin): Persediaan & Hutang Usaha
-                $hutang = \App\Models\PosMasterData::where('kode', '2-01-01')->where('level', 2)->first(); // Hutang Usaha
-                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                $hutang = PosMasterData::where('kode', '2-01-01')->where('level', 2)->first(); // Hutang Usaha
+                $persediaan = PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
                 \Log::debug('Cek jurnal pembelian termin', [
                     'hutang' => $hutang,
                     'persediaan' => $persediaan,
@@ -281,8 +300,8 @@ class TransaksiService
                 }
             } else {
                 // Pembelian Tunai: Persediaan & Kas/Bank
-                $kasbank = \App\Models\PosMasterData::where('kode', '1-01-01')->where('level', 2)->first(); // Kas dan Bank
-                $persediaan = \App\Models\PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
+                $kasbank = PosMasterData::where('kode', '1-01-01')->where('level', 2)->first(); // Kas dan Bank
+                $persediaan = PosMasterData::where('kode', '1-01-04')->where('level', 2)->first(); // Persediaan Barang
                 \Log::debug('Cek jurnal pembelian tunai', [
                     'kasbank' => $kasbank,
                     'persediaan' => $persediaan,
@@ -529,8 +548,66 @@ public function pengeluaranOperasional(array $data): Pengeluaran
      * Barang rusak tidak dikembalikan ke stok, customer ambil barang pengganti dari stok
      * 
      * @param array $data
-     * @return \App\Models\Retur
+     * @return array
      */
+<<<<<<< HEAD
+=======
+    public function prosesReturPenjualan(array $data): array
+    {
+        // Cek stok terlebih dahulu sebelum membuat retur
+        $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
+            ->where('gudang_id', $data['gudang_id'])
+            ->first();
+        
+        if (!$stok) {
+            return [
+                'success' => false,
+                'message' => 'Stok barang tidak ditemukan di gudang ini!'
+            ];
+        }
+        
+        if ($stok->jumlah < $data['jumlah']) {
+            return [
+                'success' => false,
+                'message' => 'Stok barang pengganti tidak mencukupi! Tersedia: ' . $stok->jumlah
+            ];
+        }
+
+        return DB::transaction(function () use ($data, $stok) {
+            $retur = \App\Models\Retur::create([
+                'tanggal' => $data['tanggal'] ?? now(),
+                'jenis_retur' => 'retur_penjualan',
+                'referensi_faktur' => $data['referensi_faktur'],
+                'barang_id' => $data['barang_id'],
+                'jumlah' => $data['jumlah'],
+                'alasan' => $data['alasan'] ?? null,
+                'kondisi_barang' => $data['kondisi_barang'] ?? 'rusak',
+                'aksi_stok' => 'buang', // Barang rusak dibuang, tidak kembali ke stok
+                'nilai_pengembalian' => 0, // Tidak ada pengembalian uang, ambil barang pengganti
+            ]);
+            
+            $stok->jumlah -= $data['jumlah']; // Kurangi stok untuk barang pengganti
+            $stok->save();
+            
+            // Catat ke riwayat stok (pengambilan barang pengganti)
+            RiwayatStok::create([
+                'tanggal' => $retur->tanggal,
+                'barang_id' => $data['barang_id'],
+                'jenis_transaksi' => 'retur_keluar', // Keluar karena ambil barang pengganti
+                'jumlah_masuk' => 0,
+                'jumlah_keluar' => $data['jumlah'],
+                'sisa_stok' => $stok->jumlah,
+                'referensi_id' => 'RTR-' . $retur->id,
+            ]);
+            
+            return [
+                'success' => true,
+                'data' => $retur,
+                'message' => 'Retur berhasil diproses'
+            ];
+        });
+    }
+>>>>>>> e97b32de2a5bbb8ee4d4f821673fb41ae8e466f1
 
     /**
      * Proses retur pembelian
@@ -554,8 +631,13 @@ public function pengeluaranOperasional(array $data): Pengeluaran
             ]);
             
             // Kurangi stok karena barang dikembalikan ke supplier
-            $barang = Barang::findOrFail($data['barang_id']);
-            $barang->kurangiStok($data['jumlah']);
+            $barang = BarangMaster::findOrFail($data['barang_id']);
+            $stok = \App\Models\StokBarang::where('barang_master_id', $data['barang_id'])
+                ->where('gudang_id', $data['gudang_id'] ?? 1)
+                ->first();
+            if ($stok) {
+                $stok->decrement('jumlah', $data['jumlah']);
+            }
             
             // Catat ke riwayat stok
             RiwayatStok::create([
@@ -564,7 +646,7 @@ public function pengeluaranOperasional(array $data): Pengeluaran
                 'jenis_transaksi' => 'retur_keluar',
                 'jumlah_masuk' => 0,
                 'jumlah_keluar' => $data['jumlah'],
-                'sisa_stok' => $barang->fresh()->stok,
+                'sisa_stok' => $stok ? $stok->jumlah : 0,
                 'referensi_id' => 'RTR-' . $retur->id,
             ]);
             
@@ -584,12 +666,15 @@ public function pengeluaranOperasional(array $data): Pengeluaran
     public function stockOpname(int $barangId, int $stokFisik, ?string $keterangan = null): RiwayatStok
     {
         return DB::transaction(function () use ($barangId, $stokFisik, $keterangan) {
-            $barang = Barang::findOrFail($barangId);
-            $stokSistem = $barang->stok;
+            $barang = BarangMaster::findOrFail($barangId);
+            $stok = \App\Models\StokBarang::where('barang_master_id', $barangId)->first();
+            $stokSistem = $stok ? $stok->jumlah : 0;
             $selisih = $stokFisik - $stokSistem;
             
             // Update stok barang
-            $barang->update(['stok' => $stokFisik]);
+            if ($stok) {
+                $stok->update(['jumlah' => $stokFisik]);
+            }
             
             // Catat ke riwayat stok
             return RiwayatStok::create([
@@ -667,8 +752,8 @@ public function pengeluaranOperasional(array $data): Pengeluaran
             'jumlah_transaksi_hari_ini' => Penjualan::where('status', 'selesai')
                 ->whereDate('tanggal', $today)
                 ->count(),
-            'barang_hampir_habis' => Barang::hampirHabis()->count(),
-            'barang_habis' => Barang::habis()->count(),
+            'barang_hampir_habis' => \App\Models\StokBarang::where('jumlah', '<=', 10)->where('jumlah', '>', 0)->count(),
+            'barang_habis' => \App\Models\StokBarang::where('jumlah', '<=', 0)->count(),
             'hutang_belum_lunas' => Pembelian::belumLunas()->sum('total_biaya'),
             'hutang_jatuh_tempo' => Pembelian::jatuhTempo()->sum('total_biaya'),
         ];

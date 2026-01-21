@@ -1,51 +1,173 @@
-<div>
-    <!-- Header -->
-    <div class="card mb-6">
-        <!-- Row 1: Filters -->
-        <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-end mb-4">
-            @if($showGudangFilter)
-            <div class="flex flex-col w-full lg:w-auto">
-                <label class="text-xs text-gray-600 font-medium mb-1">Gudang</label>
-                <select wire:model.live="gudangId" class="input-field w-full lg:w-40">
-                    <option value="">Semua Gudang</option>
-                    @foreach($gudangs as $gudang)
-                        <option value="{{ $gudang->id }}">{{ $gudang->nama_gudang }}</option>
-                    @endforeach
-                </select>
-            </div>
-            @endif
-            <div class="flex flex-col w-full lg:w-auto">
-                <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Mulai</label>
-                <input type="date" wire:model.live="startDate" class="input-field w-full lg:w-40">
-            </div>
-            <div class="flex flex-col w-full lg:w-auto">
-                <label class="text-xs text-gray-600 font-medium mb-1">Tanggal Sampai</label>
-                <input type="date" wire:model.live="endDate" class="input-field w-full lg:w-40">
-            </div>
-            <div class="flex flex-col w-full lg:w-auto">
-                <label class="text-xs text-gray-600 font-medium mb-1">Status Bayar</label>
-                <select wire:model.live="statusBayar" class="input-field w-full lg:w-36">
-                    <option value="">Semua Status</option>
-                    <option value="lunas">Lunas</option>
-                    <option value="belum_lunas">Belum Lunas</option>
-                </select>
-            </div>
-            <div class="flex flex-col w-full lg:w-auto">
-                <label class="text-xs text-gray-600 font-medium mb-1">Kategori Produk</label>
-                <select wire:model.live="kategoriProduk" class="input-field w-full lg:w-40">
-                    <option value="">Semua Kategori</option>
-                    @foreach($kategoris as $kategori)
-                        <option value="{{ $kategori }}">{{ $kategori }}</option>
-                    @endforeach
-                </select>
+<div class="space-y-6">
+    {{-- Filter Section --}}
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+        {{-- Search Input --}}
+        <div class="mb-6">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                    </svg>
+                </span>
+                <input type="text" 
+                       wire:model.live.debounce.300ms="search" 
+                       placeholder="Cari berdasarkan no faktur atau nama pemasok..." 
+                       class="w-full pl-14 pr-5 py-3.5 bg-gray-50/80 border border-gray-200 rounded-2xl text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200">
             </div>
         </div>
-        
-        <!-- Row 2: Action Buttons -->
-        <div class="flex gap-3 flex-wrap">
-            <a href="{{ route('pembelian.kasir') }}" class="btn-primary whitespace-nowrap flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+
+        {{-- Filters Grid --}}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {{-- Tanggal Mulai --}}
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Dari Tanggal</label>
+                <input type="date" wire:model.live="startDate" 
+                       class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200">
+            </div>
+            {{-- Tanggal Sampai --}}
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Sampai Tanggal</label>
+                <input type="date" wire:model.live="endDate" 
+                       class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200">
+            </div>
+
+            {{-- Gudang --}}
+            @if($showGudangFilter)
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('gudangId').live }" @click.away="open = false">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Gudang</label>
+                <div class="relative">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="value ? (@js($gudangs->pluck('nama_gudang', 'id'))[value] || 'Semua Gudang') : 'Semua Gudang'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2 max-h-60 overflow-y-auto">
+                            <button @click="value = ''; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="!value ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="!value" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                Semua Gudang
+                            </button>
+                            @foreach($gudangs as $gudang)
+                            <button @click="value = '{{ $gudang->id }}'; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="value == '{{ $gudang->id }}' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="value == '{{ $gudang->id }}'" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                {{ $gudang->nama_gudang }}
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Status Bayar --}}
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('statusBayar').live, labels: { '': 'Semua Status', 'lunas': 'Lunas', 'belum_lunas': 'Belum Lunas' } }" @click.away="open = false">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Bayar</label>
+                <div class="relative">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="labels[value] || 'Semua Status'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2">
+                            <template x-for="(label, key) in labels" :key="key">
+                                <button @click="value = key; open = false" type="button"
+                                        class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                        :class="value === key ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                    <span class="w-4"><svg x-show="value === key" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                    <span x-text="label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kategori --}}
+            <div class="space-y-2" x-data="{ open: false, value: @entangle('kategoriProduk').live }" @click.away="open = false">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</label>
+                <div class="relative">
+                    <button @click="open = !open" type="button"
+                            class="w-full px-4 py-3 bg-gray-50/80 border border-gray-200 rounded-xl text-sm text-left text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all duration-200 flex items-center justify-between">
+                        <span x-text="value || 'Semua Kategori'"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="py-2 max-h-60 overflow-y-auto">
+                            <button @click="value = ''; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="!value ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="!value" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                Semua Kategori
+                            </button>
+                            @foreach($kategoris as $kategori)
+                            <button @click="value = '{{ $kategori }}'; open = false" type="button"
+                                    class="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors"
+                                    :class="value === '{{ $kategori }}' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-50 text-gray-700'">
+                                <span class="w-4"><svg x-show="value === '{{ $kategori }}'" class="w-3.5 h-3.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
+                                {{ $kategori }}
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Summary Cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-blue-100">Total Pembelian (Periode)</p>
+                    <p class="text-2xl font-bold mt-1">Rp {{ number_format($totalPembelian, 0, ',', '.') }}</p>
+                </div>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Action Buttons --}}
+        <div class="flex items-center gap-3">
+            <a href="{{ route('pembelian.kasir') }}" 
+               class="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow-sm shadow-blue-500/30 transition-all hover:shadow-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
                 Kasir Pembelian
             </a>
@@ -53,111 +175,154 @@
                 $adaTermin = isset($pembelians) && $pembelians->where('status_bayar', 'belum_lunas')->where('jatuh_tempo', '!=', null)->count() > 0;
             @endphp
             <a href="{{ $adaTermin ? route('pembelian.termin') : '#' }}"
-               class="btn-success whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-lg shadow transition {{ !$adaTermin ? 'bg-gray-300 text-gray-500 cursor-not-allowed border border-gray-300 hover:bg-gray-300 hover:text-gray-500' : 'hover:bg-green-600' }}"
+               class="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium rounded-xl shadow-sm transition-all
+                      {{ $adaTermin ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/30 hover:shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed' }}"
                @if(!$adaTermin) tabindex="-1" aria-disabled="true" title="Tidak ada termin aktif" onclick="return false;" @endif>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-5 4v2m0 0v2m0-2h.01" />
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/>
                 </svg>
-                <span class="font-semibold">Kasir Termin</span>
+                Kasir Termin
             </a>
         </div>
     </div>
 
-    <!-- Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <p class="text-sm text-blue-100">Total Pembelian (Periode)</p>
-            <p class="text-2xl font-bold mt-1">Rp {{ number_format($totalPembelian, 0, ',', '.') }}</p>
-        </div>
-    </div>
-
-    
-                
-
-    <!-- Table -->
-    <div class="card-no-padding w-full">
-        <div class="w-full">
+    {{-- Data Table --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
-                    <tr class="border-b border-gray-200">
-                        <th class="table-header cursor-pointer" wire:click="sortBy('no_faktur_supplier')">
-                            No Faktur Supplier
-                            @if($sortBy === 'no_faktur_supplier')
-                                <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                            @endif
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        {{-- Sortable: No Faktur Supplier --}}
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider group cursor-pointer hover:bg-gray-100 transition-colors" 
+                            wire:click="sortBy('no_faktur_supplier')" 
+                            title="Klik untuk urutkan berdasarkan No Faktur">
+                            <div class="flex items-center gap-2">
+                                <span>No Faktur</span>
+                                <svg class="w-4 h-4 transition-all {{ $sortColumn === 'no_faktur_supplier' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-500' }} {{ $sortColumn === 'no_faktur_supplier' && $sortDirection === 'desc' ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                                </svg>
+                            </div>
                         </th>
-                        <th class="table-header cursor-pointer" wire:click="sortBy('tanggal')">
-                            Tanggal
-                            @if($sortBy === 'tanggal')
-                                <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                            @endif
+                        {{-- Sortable: Tanggal --}}
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider group cursor-pointer hover:bg-gray-100 transition-colors" 
+                            wire:click="sortBy('tanggal')" 
+                            title="Klik untuk urutkan berdasarkan Tanggal">
+                            <div class="flex items-center gap-2">
+                                <span>Tanggal</span>
+                                <svg class="w-4 h-4 transition-all {{ $sortColumn === 'tanggal' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-500' }} {{ $sortColumn === 'tanggal' && $sortDirection === 'desc' ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                                </svg>
+                            </div>
                         </th>
-                        <th class="table-header">Gudang</th>
-                        <th class="table-header">Pemasok</th>
-                        <th class="table-header text-right cursor-pointer" wire:click="sortBy('total_biaya')">
-                            Total
-                            @if($sortBy === 'total_biaya')
-                                <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                            @endif
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Gudang</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pemasok</th>
+                        {{-- Sortable: Total --}}
+                        <th class="px-5 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider group cursor-pointer hover:bg-gray-100 transition-colors" 
+                            wire:click="sortBy('total_biaya')" 
+                            title="Klik untuk urutkan berdasarkan Total">
+                            <div class="flex items-center justify-end gap-2">
+                                <span>Total</span>
+                                <svg class="w-4 h-4 transition-all {{ $sortColumn === 'total_biaya' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-500' }} {{ $sortColumn === 'total_biaya' && $sortDirection === 'desc' ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                                </svg>
+                            </div>
                         </th>
-                        <th class="table-header">Jatuh Tempo</th>
-                        <th class="table-header">Status</th>
-                        <th class="table-header text-center">Aksi</th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jatuh Tempo</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @php use Illuminate\Support\Str; @endphp
+                <tbody class="divide-y divide-gray-200">
                     @forelse($pembelians as $pembelian)
-                        <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="table-cell font-mono text-sm">{{ $pembelian->no_faktur_supplier ?: '-' }}</td>
-                            <td class="table-cell">{{ $pembelian->tanggal->format('d/m/Y') }}</td>
-                            <td class="table-cell">{{ $pembelian->gudang?->nama_gudang ?? '-' }}</td>
-                            <td class="table-cell">{{ $pembelian->pemasok?->nama_supplier ?? '-' }}</td>
-                            <td class="table-cell text-right font-medium">Rp {{ number_format($pembelian->total_biaya, 0, ',', '.') }}</td>
-                            <td class="table-cell">
+                        <tr class="hover:bg-blue-50/50 transition-colors">
+                            <td class="px-5 py-4">
+                                <span class="font-mono text-sm font-semibold text-gray-900">
+                                    {{ $pembelian->no_faktur_supplier ?: '-' }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-sm text-gray-600">
+                                {{ $pembelian->tanggal->format('d M Y') }}
+                            </td>
+                            <td class="px-5 py-4 text-sm text-gray-600">
+                                {{ $pembelian->gudang?->nama_gudang ?? '-' }}
+                            </td>
+                            <td class="px-5 py-4">
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ $pembelian->pemasok?->nama_supplier ?? '-' }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <span class="text-sm font-bold text-gray-900 whitespace-nowrap">
+                                    Rp {{ number_format($pembelian->total_biaya, 0, ',', '.') }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4">
                                 @if($pembelian->jatuh_tempo)
                                     @php
                                         $today = \Carbon\Carbon::now();
                                         $jatuhTempo = $pembelian->jatuh_tempo;
                                         $diff = $jatuhTempo ? $today->diffInDays($jatuhTempo, false) : null;
+                                        $isWarning = $pembelian->isJatuhTempo() || ($diff !== null && $diff <= 10 && $diff >= 0);
                                     @endphp
-                                    <span class="{{ ($pembelian->isJatuhTempo() || ($diff !== null && $diff <= 10 && $diff >= 0)) ? 'text-red-600 font-bold' : '' }}">
-                                        {{ $pembelian->jatuh_tempo->format('d/m/Y') }}
+                                    <span class="text-sm {{ $isWarning ? 'text-red-600 font-bold' : 'text-gray-600' }}">
+                                        {{ $pembelian->jatuh_tempo->format('d M Y') }}
                                     </span>
                                 @else
-                                    -
+                                    <span class="text-sm text-gray-400">-</span>
                                 @endif
                             </td>
-                            <td class="table-cell">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium {{ $pembelian->status_bayar === 'lunas' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                            <td class="px-5 py-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium
+                                    {{ $pembelian->status_bayar === 'lunas' 
+                                        ? 'bg-emerald-100 text-emerald-700' 
+                                        : 'bg-amber-100 text-amber-700' }}">
                                     {{ $pembelian->status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas' }}
                                 </span>
                             </td>
-                            <td class="table-cell text-center">
-                                <a href="{{ route('pembelian.show', $pembelian) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition inline-block" title="Detail Pembelian">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                </a>
-                                <button class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition inline-block ml-2" title="Hapus Pembelian" onclick="hapusPembelian({{ $pembelian->id }})">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            <!-- ...existing code... -->
+                            <td class="px-5 py-4">
+                                <div class="flex items-center justify-center gap-1">
+                                    {{-- Detail Button --}}
+                                    <a href="{{ route('pembelian.show', $pembelian) }}" 
+                                       class="w-9 h-9 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                                       title="Detail Pembelian">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </a>
+                                    {{-- Delete Button --}}
+                                    <button onclick="hapusPembelian({{ $pembelian->id }})" 
+                                            class="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                                            title="Hapus Pembelian">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                Tidak ada data pembelian
+                            <td colspan="8" class="px-5 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <p class="text-sm font-medium">Tidak ada data pembelian</p>
+                                    <p class="text-xs mt-1">Silakan ubah filter atau tambah data baru</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+        
+        {{-- Pagination --}}
+        <div class="px-5 py-4 border-t border-gray-200 bg-gray-50/50">
+            {{ $pembelians->links() }}
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -169,31 +334,33 @@
             text: 'Data pembelian dan stok akan dihapus!',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl',
+                cancelButton: 'rounded-xl'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 window.Livewire.dispatch('delete', [id]);
             }
         });
     }
+    
     window.addEventListener('pembelian-dihapus', function() {
         Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
             text: 'Data pembelian berhasil dihapus.',
             timer: 1800,
-            showConfirmButton: false
+            showConfirmButton: false,
+            customClass: {
+                popup: 'rounded-2xl'
+            }
         });
     });
 </script>
 @endpush
-
-        <!-- Pagination -->
-        <div class="px-4 py-3 border-t border-gray-200">
-            {{ $pembelians->links() }}
-        </div>
-    </div>
-</div>

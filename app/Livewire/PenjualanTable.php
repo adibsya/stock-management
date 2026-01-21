@@ -3,12 +3,12 @@
 namespace App\Livewire;
 
 use App\Models\Penjualan;
+use App\Models\StokBarang;
+use App\Models\Gudang;
+use App\Models\Pelanggan;
+use App\Models\BarangMaster;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Gudang;
-
-
-use App\Models\Pelanggan;
 
 class PenjualanTable extends Component
 {
@@ -18,7 +18,7 @@ class PenjualanTable extends Component
     public string $status = '';
     public string $startDate = '';
     public string $endDate = '';
-    public string $sortBy = 'tanggal';
+    public string $sortColumn = 'tanggal';
     public string $sortDirection = 'desc';
     public int $perPage = 10;
     public $gudang_id = '';
@@ -50,11 +50,25 @@ class PenjualanTable extends Component
 
     // Fungsi hapus penjualan dan kembalikan stok
     protected $listeners = ['hapusPenjualan'];
+    
     public function hapusPenjualan($id)
     {
+        $user = auth()->user();
         $penjualan = Penjualan::with('detailPenjualan')->findOrFail($id);
+
+        // Authorization: Only super_admin can delete, or admin for their own gudang
+        if ($user->role !== 'super_admin') {
+            if ($user->role !== 'admin' || $penjualan->gudang_id !== $user->gudang_id) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'Anda tidak memiliki izin untuk menghapus data ini.'
+                ]);
+                return;
+            }
+        }
+
         foreach ($penjualan->detailPenjualan as $detail) {
-            $stok = \App\Models\StokBarang::where('barang_master_id', $detail->barang_id)
+            $stok = StokBarang::where('barang_master_id', $detail->barang_id)
                 ->where('gudang_id', $detail->gudang_id)
                 ->first();
             if ($stok) {
@@ -88,75 +102,67 @@ class PenjualanTable extends Component
 
     public function sortBy(string $column): void
     {
-        if ($this->sortBy === $column) {
+        if ($this->sortColumn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'desc';
+            $this->sortColumn = $column;
+            $this->sortDirection = 'asc';
         }
+    }
+
+    /**
+     * Base query with common filters - DRY principle
+     */
+    private function baseQuery()
+    {
+        $user = auth()->user();
+        $startDate = $this->startDate ?: now()->startOfMonth()->format('Y-m-d');
+        $endDate = $this->endDate ?: now()->format('Y-m-d');
+
+        return Penjualan::query()
+            // Filter berdasarkan gudang untuk admin gudang
+            ->when($user && $user->role === 'admin' && $user->gudang_id, fn($q) => $q->where('gudang_id', $user->gudang_id))
+            ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
+            ->when($this->status, fn($q) => $q->where('status', $this->status))
+            ->when($this->kategoriProduk, fn($q) => $q->whereHas('detailPenjualan.barang', fn($q2) => $q2->where('kategori', $this->kategoriProduk)))
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('no_faktur', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('pelanggan', fn($q2) => $q2->where('nama_pelanggan', 'like', '%' . $this->search . '%'));
+                });
+            })
+            ->whereDate('tanggal', '>=', $startDate)
+            ->whereDate('tanggal', '<=', $endDate);
     }
 
     public function render()
     {
-        $user = auth()->user();
-
-        // Validasi dan fallback tanggal agar filter selalu aktif
-        $startDate = $this->startDate ?: now()->startOfMonth()->format('Y-m-d');
-        $endDate = $this->endDate ?: now()->format('Y-m-d');
-
-        $penjualans = Penjualan::query()
-            ->with(['pelanggan', 'user', 'gudang'])
-            // Filter berdasarkan gudang untuk admin gudang
-            ->when($user && $user->role === 'admin' && $user->gudang_id, function ($query) use ($user) {
-                $query->where('gudang_id', $user->gudang_id);
-            })
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('no_faktur', 'like', '%' . $this->search . '%')
-                        ->orWhereHas('pelanggan', function ($q2) {
-                            $q2->where('nama', 'like', '%' . $this->search . '%');
-                        });
-                });
-            })
-            ->when($this->gudang_id, function ($query) {
-                $query->where('gudang_id', $this->gudang_id);
-            })
-            ->when($this->status, function ($query) {
-                $query->where('status', $this->status);
-            })
-            ->when($this->kategoriProduk, function ($query) {
-                $query->whereHas('detailPenjualan.barang', function ($q) {
-                    $q->where('kategori', $this->kategoriProduk);
-                });
-            })
-            // Filter tanggal selalu aktif
-            ->whereDate('tanggal', '>=', $startDate)
-            ->whereDate('tanggal', '<=', $endDate)
-            ->orderBy($this->sortBy, $this->sortDirection)
+        // Use baseQuery for main list with eager loading (fixes N+1)
+        $penjualans = $this->baseQuery()
+            ->with(['pelanggan', 'user', 'gudang', 'pembayaranPenjualan'])
+            ->orderBy($this->sortColumn, $this->sortDirection)
             ->paginate($this->perPage);
 
-        $totalPenjualan = Penjualan::query()
-            // Filter berdasarkan gudang untuk admin gudang
-            ->when($user && $user->role === 'admin' && $user->gudang_id, function ($query) use ($user) {
-                $query->where('gudang_id', $user->gudang_id);
-            })
-            ->when($this->gudang_id, fn($q) => $q->where('gudang_id', $this->gudang_id))
-            ->when($this->kategoriProduk, function ($query) {
-                $query->whereHas('detailPenjualan.barang', function ($q) {
-                    $q->where('kategori', $this->kategoriProduk);
-                });
-            })
+        // Use baseQuery for total calculation
+        $totalPenjualan = $this->baseQuery()
             ->where('status', 'selesai')
-            ->whereDate('tanggal', '>=', $startDate)
-            ->whereDate('tanggal', '<=', $endDate)
             ->sum('total_bayar');
 
-        $kategoris = \App\Models\BarangMaster::select('kategori')->distinct()->whereNotNull('kategori')->pluck('kategori');
+        // Count statistics for summary cards
+        $jumlahTransaksi = $this->baseQuery()->count();
+        $jumlahTerminPending = $this->baseQuery()
+            ->where('mode_termin', 'termin')
+            ->whereHas('pembayaranPenjualan', fn($q) => $q->where('status', '!=', 'lunas'))
+            ->count();
 
+        $kategoris = BarangMaster::select('kategori')->distinct()->whereNotNull('kategori')->pluck('kategori');
         $gudangs = Gudang::orderBy('nama_gudang')->get();
+
         return view('livewire.penjualan-table', [
             'penjualans' => $penjualans,
             'totalPenjualan' => $totalPenjualan,
+            'jumlahTransaksi' => $jumlahTransaksi,
+            'jumlahTerminPending' => $jumlahTerminPending,
             'gudangs' => $gudangs,
             'kategoris' => $kategoris,
         ]);

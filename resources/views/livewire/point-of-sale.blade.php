@@ -31,15 +31,50 @@
 
         <!-- Product Grid -->
         <div class="card-compact flex-1 overflow-y-auto relative">
-            <!-- Loading Overlay -->
-            <div wire:loading wire:target="gudang_id, searchBarang" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl">
-                <div class="relative">
-                    <div class="w-16 h-16 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
-                    <svg class="w-8 h-8 text-sky-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                    </svg>
+            <!-- Loading Overlay - Premium Design -->
+            <div wire:loading wire:target="gudang_id, searchBarang" class="absolute inset-0 z-20 flex items-center justify-center">
+                <!-- Backdrop with gradient -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/95 via-sky-50/90 to-blue-50/95 backdrop-blur-md rounded-xl"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10 flex flex-col items-center">
+                    <!-- Animated Logo Container -->
+                    <div class="relative">
+                        <!-- Outer rotating ring -->
+                        <div class="w-24 h-24 rounded-full border-4 border-sky-100 border-t-sky-500 border-r-sky-400 animate-spin"></div>
+                        
+                        <!-- Inner pulsing circle -->
+                        <div class="absolute inset-2 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full animate-pulse flex items-center justify-center shadow-lg shadow-sky-200">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                            </svg>
+                        </div>
+                        
+                        <!-- Floating particles -->
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                        <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s;"></div>
+                        <div class="absolute top-1/2 -right-2 w-2 h-2 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.5s;"></div>
+                    </div>
+                    
+                    <!-- Text with animated dots -->
+                    <div class="mt-6 text-center">
+                        <p class="text-lg font-semibold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                            Memuat Produk
+                        </p>
+                        <div class="flex items-center justify-center gap-1 mt-2">
+                            <span class="w-2 h-2 bg-sky-500 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
+                            <span class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
+                            <span class="w-2 h-2 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Skeleton Preview -->
+                    <div class="mt-6 grid grid-cols-3 gap-3 opacity-50">
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse"></div>
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse" style="animation-delay: 0.1s;"></div>
+                        <div class="w-20 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg animate-pulse" style="animation-delay: 0.2s;"></div>
+                    </div>
                 </div>
-                <p class="mt-4 text-sky-600 font-medium animate-pulse">Memuat data barang...</p>
             </div>
 
             @if(!$gudang_id)
@@ -51,7 +86,7 @@
                     <p class="text-sm text-gray-400 mt-1">Klik dropdown gudang di atas untuk memulai</p>
                 </div>
             @else
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" wire:poll.5s>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     @forelse($barangs as $barang)
                         @php
                             $stok = $barang->stok->first();
@@ -134,7 +169,7 @@
                         </div>
                     </div>
                     @if(count($cart) > 0)
-                    <button wire:click="clearCart" class="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition" title="Kosongkan">
+                    <button onclick="confirm('Hapus semua item dari keranjang?') && @this.clearCart()" class="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition" title="Kosongkan">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -152,15 +187,7 @@
                             <div class="flex-1 min-w-0">
                                 <p class="font-semibold text-gray-900 truncate">{{ $item['nama_barang'] }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5">Rp {{ number_format($item['harga_satuan'], 0, ',', '.') }} / {{ $item['satuan'] ?? 'pcs' }}
-                                    @php
-                                        $isNuklerr = false;
-                                        $nama = strtolower($item['nama_barang'] ?? '');
-                                        $kode = strtolower($item['kode_barang'] ?? '');
-                                        if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
-                                            $isNuklerr = true;
-                                        }
-                                    @endphp
-                                    @if($isNuklerr && isset($item['bonus']) && $item['bonus'] > 0)
+                                    @if(isset($item['bonus']) && $item['bonus'] > 0)
                                         <span class="ml-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold text-xs">+{{ $item['bonus'] }} bonus</span>
                                     @endif
                                 </p>
@@ -171,21 +198,25 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 mt-2">
                             <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] - 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">-</button>
                             <input type="number" min="1" :max="$item['stok']" class="w-14 text-center text-lg font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" value="{{ $item['jumlah'] }}"
                                 wire:change="updateQty({{ $index }}, $event.target.value)"
                                 wire:keydown.enter="updateQty({{ $index }}, $event.target.value)"
                                 >
                             <button wire:click="updateQty({{ $index }}, {{ $item['jumlah'] + 1 }})" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 text-lg font-bold transition">+</button>
-                            @php
-                                $isNuklerr = false;
-                                $nama = strtolower($item['nama_barang'] ?? '');
-                                $kode = strtolower($item['kode_barang'] ?? '');
-                                if (strpos($nama, 'nuklerr') !== false || strpos($kode, 'rkk') !== false) {
-                                    $isNuklerr = true;
-                                }
-                            @endphp
+                            
+                            <!-- Bonus Input -->
+                            <div class="flex items-center gap-1 ml-2 pl-2 border-l border-gray-200">
+                                <span class="text-xs text-green-600 font-medium">Bonus</span>
+                                <input type="number" min="0" 
+                                    class="w-12 text-center text-sm font-semibold border rounded focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50" 
+                                    value="{{ ($item['bonus'] ?? 0) > 0 ? $item['bonus'] : '' }}"
+                                    wire:change="updateBonus({{ $index }}, $event.target.value)"
+                                    wire:keydown.enter="updateBonus({{ $index }}, $event.target.value)"
+                                    placeholder="0"
+                                    title="Jumlah Bonus Gratis">
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -303,20 +334,27 @@
 
             <!-- Payment -->
 
-            <!-- Actions -->
-            <div class="mt-4 flex gap-3">
-                <button wire:click="clearCart" class="btn-secondary flex-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    Batal
-                </button>
-                <button wire:click="prosesTransaksi" class="btn-success flex-1 text-base py-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Bayar
-                </button>
+            <!-- Actions Footer -->
+            <div class="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
+                <div class="flex gap-3">
+                    <button onclick="confirm('Batalkan transaksi ini?') && @this.clearCart()" class="btn-secondary flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Batal
+                    </button>
+                    <button wire:click="prosesTransaksi" wire:loading.attr="disabled" class="btn-success flex-1 text-base py-3 disabled:opacity-50">
+                        <svg wire:loading.remove wire:target="prosesTransaksi" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <svg wire:loading wire:target="prosesTransaksi" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span wire:loading.remove wire:target="prosesTransaksi">Bayar</span>
+                        <span wire:loading wire:target="prosesTransaksi">Memproses...</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

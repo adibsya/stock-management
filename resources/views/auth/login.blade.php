@@ -206,10 +206,21 @@
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
+            const iconEye = document.getElementById('icon-eye');
+            const iconEyeOff = document.getElementById('icon-eye-off');
+            
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
+                iconEye.classList.add('hidden');
+                iconEye.classList.remove('block');
+                iconEyeOff.classList.add('block');
+                iconEyeOff.classList.remove('hidden');
             } else {
                 passwordInput.type = 'password';
+                iconEye.classList.add('block');
+                iconEye.classList.remove('hidden');
+                iconEyeOff.classList.add('hidden');
+                iconEyeOff.classList.remove('block');
             }
         }
 
@@ -217,7 +228,7 @@
         setInterval(function() {
             fetch('/refresh-csrf')
                 .then(response => response.json())
-                .then data => {
+                .then(data => {
                     document.querySelector('input[name="_token"]').value = data.token;
                     document.querySelector('meta[name="csrf-token"]').content = data.token;
                 })
