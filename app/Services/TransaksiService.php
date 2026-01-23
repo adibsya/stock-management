@@ -151,18 +151,6 @@ class TransaksiService
         $akunHpp = PosMasterData::where('kode', '5-01-01')->first();
         $akunPersediaan = PosMasterData::where('kode', '1-01-04')->first();
 
-<<<<<<< HEAD
-        app(\App\Services\JurnalService::class)->create(
-            $penjualan->tanggal,
-            'HPP' . $penjualan->no_faktur,
-            'penjualan',
-            $penjualan->id,
-            [
-                ['coa_id' => $akunHpp->id, 'debit' => $hpp],
-                ['coa_id' => $akunPersediaan->id, 'kredit' => $hpp],
-            ]
-        );
-=======
         // Only create HPP jurnal if all COA accounts exist
         if ($akunHpp && $akunPersediaan) {
             app(\App\Services\JurnalService::class)->create(
@@ -176,7 +164,6 @@ class TransaksiService
                 ]
             );
         }
->>>>>>> e97b32de2a5bbb8ee4d4f821673fb41ae8e466f1
 
         return $penjualan->load('detailPenjualan.barang');
     });
@@ -550,8 +537,6 @@ public function pengeluaranOperasional(array $data): Pengeluaran
      * @param array $data
      * @return array
      */
-<<<<<<< HEAD
-=======
     public function prosesReturPenjualan(array $data): array
     {
         // Cek stok terlebih dahulu sebelum membuat retur
@@ -607,7 +592,6 @@ public function pengeluaranOperasional(array $data): Pengeluaran
             ];
         });
     }
->>>>>>> e97b32de2a5bbb8ee4d4f821673fb41ae8e466f1
 
     /**
      * Proses retur pembelian

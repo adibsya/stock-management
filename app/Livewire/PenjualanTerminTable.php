@@ -4,11 +4,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Services\TransaksiService;
 use App\Models\PembayaranPenjualan;
-<<<<<<< HEAD
-use Illuminate\Support\Facades\DB;
-=======
 use App\Models\Pelanggan;
->>>>>>> e97b32de2a5bbb8ee4d4f821673fb41ae8e466f1
 
 class PenjualanTerminTable extends Component
 {
