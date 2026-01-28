@@ -50,7 +50,7 @@ class PengeluaranForm extends Component
     {
         $this->validate();
 
-    app(\App\Services\TransaksiService::class)
+        app(TransaksiService::class)
         ->pengeluaranOperasional([
             'tanggal' => $this->tanggal,
             'jenis_pengeluaran' => $this->jenis_pengeluaran,
