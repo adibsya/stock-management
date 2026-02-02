@@ -265,8 +265,12 @@ class PointOfSale extends Component
 
     public function getDiskonProperty(): float
     {
-        $diskon = trim($this->diskon);
-        return $diskon === '' ? 0.0 : (float) $diskon;
+        $persen = trim($this->diskon);
+        if ($persen === '') {
+            return 0.0;
+        }
+        $persen = max(0, min(100, (float) $persen));
+        return $this->subtotal * ($persen / 100);
     }
 
     public function getTotalProperty(): float
@@ -342,6 +346,7 @@ class PointOfSale extends Component
             'pelanggan_id' => $this->pelanggan_id,
             'gudang_id' => $this->gudang_id,
             'items' => $items,
+            'diskon_transaksi' => $this->getDiskonProperty(),
             'mode_termin' => $modeTermin,
             'jatuh_tempo' => $jatuhTempo,
             'status' => $modeTermin === 'termin' ? 'belum_lunas' : 'selesai',

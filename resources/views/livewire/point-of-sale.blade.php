@@ -301,12 +301,12 @@
                     </div>
                     @endif
 
-                    <!-- Diskon -->
+                    <!-- Diskon (%) -->
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Diskon</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
-                            <input type="number" wire:model.blur="diskon" class="input-with-prefix-left text-sm" min="0" placeholder="0">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
+                            <input type="number" wire:model.blur="diskon" class="input-with-prefix-left text-sm" min="0" max="100" step="0.01" placeholder="0">
                         </div>
                     </div>
                 </div>
