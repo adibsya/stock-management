@@ -20,6 +20,7 @@ class Penjualan extends Model
         'diskon_transaksi',
         'pajak',
         'total_bayar',
+        'metode_pembayaran',
         'mode_termin',
         'jatuh_tempo',
         'status',

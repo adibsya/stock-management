@@ -72,6 +72,7 @@ class TransaksiService
             'diskon_transaksi' => $diskon,
             'pajak' => $pajak,
             'total_bayar' => $totalBayar,
+            'metode_pembayaran' => $data['metode_pembayaran'] ?? 'tunai',
             'mode_termin' => $data['mode_termin'] ?? 'cash',
             'status' => 'selesai',
         ]);

@@ -18,6 +18,8 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BarangMasterController;
 use App\Livewire\PosMasterIndex;
+use App\Exports\NeracaExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 // Auth Routes
@@ -39,6 +41,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/neraca', function () {
             return view('neraca.index');
         })->name('neraca.index');
+        Route::get('/neraca/export', function () {
+            $tanggal = request('tanggal', date('Y-m-d'));
+            $filename = 'neraca-' . $tanggal . '.xlsx';
+            return Excel::download(new NeracaExport($tanggal), $filename);
+        })->name('neraca.export');
 
     // Superadmin Panel - Multi Gudang & Manajemen Akun
     Route::middleware('role:super_admin')->group(function () {

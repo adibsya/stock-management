@@ -21,6 +21,11 @@ class NeracaTable extends Component
         $this->data = Neraca::with('pos')->where('tanggal', $this->tanggal)->get();
     }
 
+    public function exportExcel()
+    {
+        return redirect()->route('neraca.export', ['tanggal' => $this->tanggal]);
+    }
+
     public function render()
     {
         return view('livewire.neraca-table');

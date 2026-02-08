@@ -265,6 +265,8 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Cara Bayar</label>
                         <select wire:model.live="termin" class="input-field text-sm">
                             <option value="0">💵 Tunai</option>
+                            <option value="transfer_bri">🏦 Transfer BRI</option>
+                            <option value="bank_jatim">🏦 Bank Jatim</option>
                             <option value="1">📅 Termin Sekali (1x Jatuh Tempo)</option>
                             <option value="2">📆 Termin Bertahap (Multi Cicilan)</option>
                         </select>

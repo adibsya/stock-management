@@ -80,7 +80,7 @@ class PointOfSale extends Component
                 'tanggal_jatuh_tempo' => $this->tanggal_mulai_termin ?: date('Y-m-d'),
             ]],
             self::TERMIN_BERTAHAP => $this->generateTerminBertahap(),
-            default => $this->termins = [],
+            default => $this->termins = [], // Tunai, Transfer BRI, Bank Jatim
         };
     }
 
@@ -248,6 +248,7 @@ class PointOfSale extends Component
     {
         $this->cart = [];
         $this->pelanggan_id = null;
+        $this->termin = self::TERMIN_TUNAI;
         $this->bayar = '0';
         $this->diskon = '';
     }
@@ -336,10 +337,12 @@ class PointOfSale extends Component
             'bonus' => $item['bonus'] ?? 0,
         ], $this->cart);
 
-        $modeTermin = $this->termin === self::TERMIN_TUNAI ? 'cash' : 'termin';
+        $isTermin = $this->termin === self::TERMIN_SEKALI || $this->termin === self::TERMIN_BERTAHAP;
+        $modeTermin = $isTermin ? 'termin' : 'cash';
         $jatuhTempo = $this->termin === self::TERMIN_SEKALI
             ? ($this->termins[0]['tanggal_jatuh_tempo'] ?? null)
             : null;
+        $metodePembayaran = $this->getMetodePembayaranForSave();
 
         return $transaksiService->simpanPenjualan([
             'user_id' => $user->id,
@@ -350,6 +353,7 @@ class PointOfSale extends Component
             'mode_termin' => $modeTermin,
             'jatuh_tempo' => $jatuhTempo,
             'status' => $modeTermin === 'termin' ? 'belum_lunas' : 'selesai',
+            'metode_pembayaran' => $metodePembayaran,
         ]);
     }
 
@@ -395,6 +399,16 @@ class PointOfSale extends Component
         }
 
         return $this->validateTerminData();
+    }
+
+    private function getMetodePembayaranForSave(): string
+    {
+        return match ($this->termin) {
+            'transfer_bri' => 'transfer_bri',
+            'bank_jatim' => 'bank_jatim',
+            self::TERMIN_SEKALI, self::TERMIN_BERTAHAP => 'termin',
+            default => 'tunai',
+        };
     }
 
     private function validateTerminData(): bool
